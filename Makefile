@@ -1,6 +1,6 @@
 all: directories bin/main
 
-directories: bin build
+directories:
 	mkdir -p bin; mkdir -p build
 
 bin/main: build/main.o build/arguments.o $(shell pwd)/modules/lib/replicators.so
