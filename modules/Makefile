@@ -1,7 +1,7 @@
 all: lib/replicators.so
 
 lib/replicators.so: build/instantiate_replicator.o build/Replicator1.o build/Replicator2.o build/BaseReplicator.o
-	g++ -shared $^ -o $@
+	mkdir build; mkdir lib; g++ -shared $^ -o $@
 
 build/instantiate_replicator.o: ./src/instantiate_replicator.cpp ./include/instantiate_replicator.h ./replicators/Replicator1/Replicator1.h ./replicators/Replicator1/Replicator1.h
 	g++ -I./include/ -I./replicators/Replicator1/ -I./replicators/Replicator2/ -fpic -c $< -o $@
