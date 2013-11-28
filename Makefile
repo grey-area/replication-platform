@@ -1,7 +1,10 @@
-all: bin/main
+all: directories bin/main
+
+directories: bin build
+	mkdir -p bin; mkdir -p build
 
 bin/main: build/main.o build/arguments.o $(shell pwd)/modules/lib/replicators.so
-	mkdir bin; mkdir build; g++ $^ -o $@
+	g++ $^ -o $@
 
 build/main.o: ./src/main.cpp
 	g++ -I./include -I./modules/include -c $< -o $@
