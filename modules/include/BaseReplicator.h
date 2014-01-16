@@ -4,9 +4,15 @@
 class BaseReplicator
 {
 public:
+  int fitness;
+  int age;
+  int *bodySpecification;
+  BaseReplicator* child;
+
   BaseReplicator();
   ~BaseReplicator();
-  virtual BaseReplicator* update();
+  virtual void update();
+  void baseUpdate();
 };
 
 #endif /* BASEREPLICATOR_H */

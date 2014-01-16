@@ -10,10 +10,7 @@ Replicator1::~Replicator1()
 {
 }
 
-BaseReplicator* Replicator1::update()
+void Replicator1::update()
 {
-  BaseReplicator* child;
-  cout << "Replicator1" << endl;
-
-  return child;
+  child = new Replicator1;
 }

@@ -4,14 +4,22 @@ using namespace std;
 
 BaseReplicator::BaseReplicator()
 {
+  fitness = 1;
+  age     = 0;
+  bodySpecification = NULL;
+  child = NULL;
 }
 
 BaseReplicator::~BaseReplicator()
 {
 }
 
-BaseReplicator* BaseReplicator::update()
+void BaseReplicator::update()
 {
-  BaseReplicator* child;
-  return child;
+}
+
+void BaseReplicator::baseUpdate()
+{
+  child = NULL;
+  age++;
 }
