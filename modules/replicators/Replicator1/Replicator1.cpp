@@ -10,7 +10,3 @@ Replicator1::~Replicator1()
 {
 }
 
-void Replicator1::update()
-{
-  child = new Replicator1;
-}
