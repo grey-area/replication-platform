@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 
 #ifndef BASEREPLICATOR_H
 #define BASEREPLICATOR_H
@@ -14,15 +15,17 @@ class BaseReplicator
 public:
 
   static std::string modelName;
+  static int alphabetSize;
+  static int initialDataSize;
+  static int minDataSize;
+  static int maxDataSize;
 
+  int id;
   int state;
-
   unsigned int age;
 
-  unsigned char *data;
-  unsigned char *decodedData;
-
-  unsigned char *bodySpecification;
+  std::vector<unsigned short> data;
+  std::vector<unsigned short> bodySpecification;
   float fitness;
 
   BaseReplicator* child;
@@ -30,9 +33,18 @@ public:
   BaseReplicator();
   ~BaseReplicator();
 
-  virtual void initializeDecoding();
-  virtual unsigned char *copyData();
-  virtual void decode();
+  void printData(std::vector<unsigned short>);
+
+  // For creating new random entity
+  virtual void newData();    // *
+  virtual void newDecoder(); // **
+  void newEntity();
+
+  virtual void initializeDecoding();              // **
+  virtual std::vector<unsigned short> copyData(); // *
+  virtual void decode();     // **
+
+  // ** = override. * = optionally override.
 
   void update();
 
