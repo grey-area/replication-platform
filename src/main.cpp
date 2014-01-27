@@ -17,7 +17,7 @@ BaseReplicator ***grid;
 // Initialization
 void init(int argc, char **argv)
 {
-  srand(time(NULL));
+  srand(0);
 
   // Parse command line arguments, put result in args struct (see arguments.h)
   // args.model is the name of the replication model we'll use
@@ -26,10 +26,10 @@ void init(int argc, char **argv)
   
   // TODO: set these from command line / config file?
   BaseReplicator::modelName = args.model;
-  BaseReplicator::alphabetSize = 4;
-  BaseReplicator::initialDataSize = 30;
+  BaseReplicator::alphabetSize = 31;
+  BaseReplicator::initialDataSize = 10;
   BaseReplicator::minDataSize = 1;
-  BaseReplicator::maxDataSize = 100;
+  BaseReplicator::maxDataSize = 200;
 
   // Initialize a 2D grid of pointers to replicator objects
   grid = new BaseReplicator**[args.width];
@@ -55,6 +55,17 @@ int loop(int generation)
   //cout << "Pass: " << generation << endl;
   int headCount = 0;
 
+  // TODO: temp solution?
+  if (generation%50==0)
+  {
+    for(int j=0;j<args.height; j++)
+    {
+      grid[0][j] = newModel(args.model);
+      grid[0][j]->state = START;
+      grid[0][j]->newEntity();
+    }
+  }
+
   // Call update on each replicator periodically, with frequency depending on fitness
   for(int i=0; i<args.width; i++)
   {
@@ -73,7 +84,11 @@ int loop(int generation)
 
 	// Update (usually means incrementally decode genetic information)
 	//cout << "\tUpdating " << entity->id << " at (" << ip << "," << j << ")" << endl;
-	entity->update();
+	int debug = (ip<4 and j<4);
+	debug = false;
+	if (debug)
+	  cout << "Updating " << ip << "," << j << endl;
+	entity->update(debug);
 
 	// If the entity has a non-embryonic child (has reproduced)
 	if (entity->child and (entity->child)->state != EMBRYO)
@@ -82,14 +97,19 @@ int loop(int generation)
 	  entity->child = NULL;
 
 	  // if the child has a body specification, send it to the task sequencer
+	  // TODO temp
+	  if (entity->gestationTime>5)
+	    child->fitness=1.0;
 
 	  // Put the child in a cell neighbouring the parent
 	  int x = mod((ip+rand()%3-1), args.width);
 	  int y = mod((j +rand()%3-1), args.height);
-	  //cout << "\t\tPlacing child " << child->id << " at (" << x << "," << y << ")" << endl;
+	  if (debug)
+	    cout << "\tPlacing child " << child->id << " at (" << x << "," << y << ")" << endl;
 	  if (grid[x][y])
 	  {
-	    //cout << "\t\tReplacing " << grid[x][y]->id << endl;
+	    if (debug)
+	      cout << "\tDeleting " << grid[x][y]->id << " to make room" << endl;
 	    deleteModel(args.model, grid[x][y]);
 	  }
 	  grid[x][y] = child;
@@ -99,7 +119,7 @@ int loop(int generation)
     } // end of cell update
   } // end of row update
 
-  //cout << "G:" << generation << " H:" << headCount << endl;
+  cout << "End of gen: " << generation << "  Headcount:" << headCount << endl << endl;
 
   // TODO: Periodically save current state and data
 }

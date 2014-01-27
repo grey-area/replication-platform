@@ -15,10 +15,11 @@ int BaseReplicator::maxDataSize;
 
 BaseReplicator::BaseReplicator()
 {
-  id = rand()%10000;
+  id = rand()%100000;
 
-  state = EMBRYO;
+  state   = EMBRYO;
   age     = 0;
+  gestationTime = 0;
 
   fitness = 0.0;
   child = NULL;
@@ -60,7 +61,7 @@ void BaseReplicator::newEntity()
 }
 
 // To override
-void BaseReplicator::initializeDecoding()
+void BaseReplicator::initializeDecoding(int debug)
 {
 }
 
@@ -70,45 +71,51 @@ vector<unsigned short> BaseReplicator::copyData()
   vector<unsigned short> dataCopy (data);
   //dataCopy.insert(dataCopy.end(), data.begin(), data.end());
 
+  // TODO: I changed the probablities to 0.2
+
   // Insert with probability 0.5
-  if (rand()%2 and data.size() < maxDataSize)
+  if (rand()%20==0 and data.size() < maxDataSize)
     dataCopy.insert(dataCopy.begin()+rand()%(dataCopy.size()), rand()%alphabetSize);
   // Delete with probability 0.5
-  if (rand()%2 and data.size() > minDataSize)
+  if (rand()%20==0 and data.size() > minDataSize)
     dataCopy.erase(dataCopy.begin()+rand()%(dataCopy.size()));
   // Change with probability 0.5
-  if (rand()%2)
+  if (rand()%20==0)
     dataCopy.at(rand()%(dataCopy.size())) = rand()%alphabetSize;
 
   return dataCopy;
 }
 
 // To override
-void BaseReplicator::decode()
+void BaseReplicator::decode(int debug)
 {
   state = REPRODUCED;
 }
 
-void BaseReplicator::update()
+void BaseReplicator::update(int debug)
 {
+  age++;
+  gestationTime++;
+
   //cout << "\tState: " << state << endl;;
   switch(state)
   {
     case START:
 
       // Create new child
+      gestationTime = 0;
       child = newModel(modelName);
       //cout << "\t\tCreated child " << child->id << endl;
       // Copy data to child
       child->data = copyData();
 
       state = DECODING;
-      initializeDecoding();
+      initializeDecoding(debug);
       break;
 
     case DECODING:
 
-      decode();
+      decode(debug);
       // Subclass implements this. When it's finished decoding, we expect it to
       // change state to REPRODUCED, and to have given the child a decoding function
       // and body specification

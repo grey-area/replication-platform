@@ -23,6 +23,7 @@ public:
   int id;
   int state;
   unsigned int age;
+  unsigned int gestationTime;
 
   std::vector<unsigned short> data;
   std::vector<unsigned short> bodySpecification;
@@ -40,13 +41,13 @@ public:
   virtual void newDecoder(); // **
   void newEntity();
 
-  virtual void initializeDecoding();              // **
+  virtual void initializeDecoding(int);              // **
   virtual std::vector<unsigned short> copyData(); // *
-  virtual void decode();     // **
+  virtual void decode(int);     // **
 
   // ** = override. * = optionally override.
 
-  void update();
+  void update(int);
 
 };
 
