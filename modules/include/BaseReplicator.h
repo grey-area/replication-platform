@@ -32,22 +32,26 @@ public:
   BaseReplicator* child;
 
   BaseReplicator(int);
-  ~BaseReplicator();
+  virtual ~BaseReplicator();
 
   void printData(std::vector<unsigned short>);
 
   // For creating new random entity
+  void newEntity(int);
+
+  void update(int);
+
+ private:
+
+  // Called by newEntity
   virtual void newData(int);    // *
   virtual void newDecoder(int); // **
-  void newEntity(int);
 
   virtual void initializeDecoding(int);              // **
   virtual std::vector<unsigned short> copyData(int); // *
   virtual void decode(int);     // **
 
   // ** = override. * = optionally override.
-
-  void update(int);
 
 };
 

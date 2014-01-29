@@ -19,6 +19,8 @@ void newEntities()
 {
   for(int j=0;j<args.height; j++)
   {
+    if (grid[0][j])
+      deleteModel(args.model, grid[0][j], args.debug);
     grid[0][j] = newModel(args.model, args.debug);
     grid[0][j]->state = START;
     grid[0][j]->newEntity(args.debug);
