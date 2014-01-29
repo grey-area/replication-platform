@@ -2,6 +2,7 @@ struct arguments
 {
   string       use;
   bool         display;
+  bool         debug;
   int          profiling;
   int          width;
   int          height;

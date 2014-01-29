@@ -1,5 +1,5 @@
 #include "BaseReplicator.h"
 #include <string>
 
-BaseReplicator* newModel(string);
-void deleteModel(string, BaseReplicator*);
+BaseReplicator* newModel(string, int);
+void deleteModel(string, BaseReplicator*, int);
