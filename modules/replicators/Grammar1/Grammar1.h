@@ -1,6 +1,5 @@
 #include "BaseReplicator.h"
 #include <list>
-#include <map>
 
 class Grammar1 : public BaseReplicator
 {

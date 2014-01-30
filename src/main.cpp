@@ -7,12 +7,13 @@ using namespace std;
 #include "arguments.h"
 #include "misc.h"
 #include "BaseReplicator.h"
+#include "BaseEnvironment.h"
 #include "modelHandler.h"
 
 
 arguments args;
-BaseReplicator ***grid;
-
+vector <vector <BaseReplicator* > > grid;
+BaseEnvironment *environment;
 
 // Put some brand new (orphan) entities on the grid. Periodically called.
 void newEntities()
@@ -29,13 +30,13 @@ void newEntities()
 
 
 // Send the child's body specification to the task environment and place the child on the grid
-void placeChild(BaseReplicator *child, int i, int j)
+void placeChild(BaseReplicator *child, int i, int j, int &x, int &y)
 {
   // TODO send body specification to the task environment
 
   // Put the child in a random cell neighbouring the parent
-  int x = mod((i+rand()%3-1), args.width);
-  int y = mod((j +rand()%3-1), args.height);
+  x = mod((i+rand()%3-1), args.width);
+  y = mod((j +rand()%3-1), args.height);
   // TODO What do I want to print?
   if (args.debug)
     cout << "\tPlacing child " << child->id << " at (" << x << "," << y << ")" << endl;
@@ -63,20 +64,21 @@ void init(int argc, char **argv)
   cout << args;
   
   // TODO: set these from command line / config file?
-  BaseReplicator::modelName = args.model;
-  BaseReplicator::alphabetSize = 31;
-  BaseReplicator::initialDataSize = 10;
-  BaseReplicator::minDataSize = 1;
-  BaseReplicator::maxDataSize = 200;
+  // alphabet size, initial/min/max data size
+  BaseReplicator::setArgs(args.model, 31, 10, 1, 100);
 
   // Initialize a 2D grid of pointers to replicator objects
-  grid = new BaseReplicator**[args.width];
+  grid.resize(args.width);
   for(int i=0; i<args.width; i++)
   {
-    grid[i] = new BaseReplicator*[args.height];
+    grid[i].resize(args.height);
     for(int j=0; j<args.height; j++)
       grid[i][j] = NULL;
   }
+
+  // Initialize the environment TODO: use factory
+  environment = newEnvironment(args.environment, args.debug);
+  environment->grid = &grid;
 
   // Put some brand new (orphan) entities on the grid
   newEntities();
@@ -92,6 +94,9 @@ int loop(int generation)
   // Every so often, add new (orphan) entities to one line of the grid
   if (generation%100==0)
     newEntities();
+
+  // If fitnesses are periodically updated, update them
+  environment->updateFitnesses(args.debug);
 
   // Call update on each replicator periodically
   // TODO: change mechanism? (Instead of looping over all...?)
@@ -124,7 +129,9 @@ int loop(int generation)
 	  entity->child = NULL;
 
 	  // Send the child's body specification to the task environment, and place the child on the grid
-	  placeChild(child, ip, j);
+	  int x,y;
+	  placeChild(child, ip, j, x, y);
+	  environment->interpretBody(x, y, generation, args.debug);
 	}
 
       } // end of if entity exists check
@@ -150,9 +157,9 @@ void cleanUp()
         deleteModel(args.model, grid[i][j], args.debug);
       }
     }
-    delete [] grid[i];
   }
-  delete [] grid;
+
+  deleteEnvironment(args.environment, environment, args.debug);
 }
 
 

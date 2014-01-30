@@ -6,12 +6,20 @@ using namespace std;
 #include <algorithm>
 #include <set>
 
-std::string BaseReplicator::modelName;
+string BaseReplicator::modelName;
 int BaseReplicator::alphabetSize;
 int BaseReplicator::initialDataSize;
 int BaseReplicator::minDataSize;
 int BaseReplicator::maxDataSize;
 
+void BaseReplicator::setArgs(string model, int alph, int initData, int minData, int maxData)
+{
+  modelName = model;
+  alphabetSize = alph;
+  initialDataSize = initData;
+  minDataSize = minData;
+  maxDataSize = maxData;
+}
 
 BaseReplicator::BaseReplicator(int debug)
 {

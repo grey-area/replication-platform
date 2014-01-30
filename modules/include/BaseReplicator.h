@@ -19,6 +19,7 @@ public:
   static int initialDataSize;
   static int minDataSize;
   static int maxDataSize;
+  static void setArgs(std::string,int,int,int,int);
 
   int id;
   int state;
