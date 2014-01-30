@@ -1,5 +1,6 @@
 #include "BaseReplicator.h"
 #include <list>
+#include <map>
 
 class Grammar1 : public BaseReplicator
 {
@@ -11,7 +12,7 @@ class Grammar1 : public BaseReplicator
  private:
 
   int ruleAlphabet;
-  vector<vector<unsigned short> > rules;
+  vector <vector<unsigned short> > rules;
   list<unsigned short> decodedData;
   list<unsigned short>::iterator prevIt;
   bool prevChanged;

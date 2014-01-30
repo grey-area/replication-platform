@@ -90,7 +90,7 @@ int loop(int generation)
   int totalFitness = 0;
 
   // Every so often, add new (orphan) entities to one line of the grid
-  if (generation%50==0)
+  if (generation%100==0)
     newEntities();
 
   // Call update on each replicator periodically
