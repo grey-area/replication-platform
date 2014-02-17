@@ -5,7 +5,7 @@ class Grammar1 : public BaseReplicator
 {
  public:
 
-  Grammar1(int);
+  Grammar1(config&);
   ~Grammar1();
 
  private:
@@ -15,10 +15,12 @@ class Grammar1 : public BaseReplicator
   list<unsigned short> decodedData;
   list<unsigned short>::iterator prevIt;
   bool prevChanged;
-  void interpret(Grammar1*, int);
+  void interpret(config&, Grammar1*);
 
-  void newDecoder(int);
-  void initializeDecoding(int);
-  void decode(int);
+  void printDecoder();
+
+  void newDecoder(config&);
+  void initializeDecoding(config&);
+  void decode(config&);
 
 };

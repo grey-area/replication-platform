@@ -1,8 +1,9 @@
 #include "BaseReplicator.h"
 #include "BaseEnvironment.h"
 #include <string>
+#include "config.h"
 
-BaseReplicator* newModel(string, int);
-void deleteModel(string, BaseReplicator*, int);
-BaseEnvironment* newEnvironment(string, int);
-void deleteEnvironment(string, BaseEnvironment*, int);
+BaseReplicator* newModel(config&);
+void deleteModel(config&, BaseReplicator*);
+BaseEnvironment* newEnvironment(config&);
+void deleteEnvironment(config&, BaseEnvironment*);

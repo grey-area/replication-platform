@@ -1,4 +1,5 @@
 #include "BaseReplicator.h"
+#include "config.h"
 #include <vector>
 
 #ifndef BASEENVIRONMENT_H
@@ -11,10 +12,10 @@ public:
 
   std::vector <std::vector <BaseReplicator*> > *grid;
 
-  virtual void interpretBody(int,int,int,int);
-  virtual void updateFitnesses(int);
+  virtual void interpretBody(config&,int,int,int);
+  virtual void updateFitnesses(config&);
 
-  BaseEnvironment(int);
+  BaseEnvironment(config&);
   ~BaseEnvironment();
 };
 

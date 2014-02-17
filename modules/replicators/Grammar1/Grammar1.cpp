@@ -4,8 +4,21 @@ using namespace std;
 #include "Grammar1.h"
 
 
+void Grammar1::printDecoder()
+{
+  int rule = 0;
+  for (vector <vector <unsigned short> >::iterator it = rules.begin() ; it != rules.end(); ++it,++rule)
+  {
+    cout << rule << " -> ";
+    for (vector <unsigned short>::iterator r = it->begin(); r!=it->end(); ++r)
+      cout << *r << ",";
+    cout << endl;
+  }
+}
+
+
 // Create a new decoder, for an `orphan' cell
-void Grammar1::newDecoder(int debug)
+void Grammar1::newDecoder(config &args)
 {
   // Start with everything rewriting to nothing
   rules.resize(ruleAlphabet);
@@ -13,23 +26,15 @@ void Grammar1::newDecoder(int debug)
 
 
 // Done at the start of each reproduction cycle
-void Grammar1::initializeDecoding(int debug)
+void Grammar1::initializeDecoding(config &args)
 {
-  // Copy child's data to decoded data
-  copy(child->data.begin(), child->data.end(), back_inserter(((Grammar1*)child)->decodedData));
-  prevIt = ((Grammar1*)child)->decodedData.begin();
-  prevChanged = false;
+  Grammar1 *c = ((Grammar1*)child);
 
-  // TODO what to I want to print when debugging?
-  if (debug)
-  {
-    cout << endl << "Initializing decoding" << endl;
-    cout << "\tid: " << id << "  child id: " << child->id << endl;
-    cout << "My data" << endl;
-    printData(data);
-    cout << "Child data" << endl;
-    printData(child->data);
-  }
+  // Copy child's data to decoded data
+  copy(child->data.begin(), child->data.end(), back_inserter(c->decodedData));
+
+  prevIt = c->decodedData.begin();
+  prevChanged = false;
 }
 
 
@@ -37,10 +42,10 @@ void Grammar1::initializeDecoding(int debug)
 // Interpret that data as the specification of a list of rewrite rules.
 // Give that list of rewrite rules to the child. Give it the data after
 // the specification of the rule table as its `body specification'
-void Grammar1::interpret(Grammar1 *c, int debug)
+void Grammar1::interpret(config &args, Grammar1 *c)
 {
   // TODO what to print when debugging?
-  if (debug)
+  if (args.debug)
   {
     cout << "Decoding complete" << endl;
     if (decodedData==c->decodedData)
@@ -92,7 +97,7 @@ void Grammar1::interpret(Grammar1 *c, int debug)
 
 
 // Iteratively apply the rewrite rules (decoder) to the data
-void Grammar1::decode(int debug)
+void Grammar1::decode(config &args)
 {
   Grammar1 *c = (Grammar1*)child;
 
@@ -110,7 +115,6 @@ void Grammar1::decode(int debug)
   int count = 0;
   for (it = prevIt ; it != c->decodedData.end(); ++it,++count)
   {
-
     if(count>10)
     {
       changed = true;
@@ -135,7 +139,7 @@ void Grammar1::decode(int debug)
   prevIt = it;
 
   // TODO what to print when debugging?
-  if (debug)
+  if (args.debug)
   {
     cout << endl << "Decoding step" << endl;
     cout << "\tid: " << id << "  child id: " << child->id << endl;
@@ -151,13 +155,13 @@ void Grammar1::decode(int debug)
   // and go to state reproduced, passing control back to the BaseReplicator
   if (not changed and not prevChanged)
   {
-    interpret(c, debug);
+    interpret(args, c);
     state = REPRODUCED;
   }
 }
 
 
-Grammar1::Grammar1(int debug) : BaseReplicator(debug)
+Grammar1::Grammar1(config &args) : BaseReplicator(args)
 {
   ruleAlphabet = alphabetSize/3;
 }

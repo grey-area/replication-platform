@@ -2,7 +2,7 @@ using namespace std;
 
 #include "BaseEnvironment.h"
 
-BaseEnvironment::BaseEnvironment(int debug)
+BaseEnvironment::BaseEnvironment(config &args)
 {
 }
 
@@ -12,13 +12,13 @@ BaseEnvironment::~BaseEnvironment()
 
 
 // Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future, and maybe evaluate it now
-void BaseEnvironment::interpretBody(int x, int y, int t, int debug)
+void BaseEnvironment::interpretBody(config &args, int x, int y, int t)
 {
   (*grid)[x][y]->fitness = 0.0;
 }
 
 // Maybe evaluate the fitnesses of every entity
-void BaseEnvironment::updateFitnesses(int debug)
+void BaseEnvironment::updateFitnesses(config &args)
 {
 /*for (vector<vector<BaseReplicator*> >::iterator i = grid->begin(); i != grid->end();++i) 
   {

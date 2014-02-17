@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include "config.h"
 
 #ifndef BASEREPLICATOR_H
 #define BASEREPLICATOR_H
@@ -32,25 +33,30 @@ public:
 
   BaseReplicator* child;
 
-  BaseReplicator(int);
+  BaseReplicator(config&);
   virtual ~BaseReplicator();
 
-  void printData(std::vector<unsigned short>);
-
   // For creating new random entity
-  void newEntity(int);
+  void newEntity(config&);
 
-  void update(int);
+  // For printing decoder and data
+  void print();
+
+  void update(config&);
 
  private:
 
   // Called by newEntity
-  virtual void newData(int);    // *
-  virtual void newDecoder(int); // **
+  virtual void newData(config&);    // *
+  virtual void newDecoder(config&); // **
 
-  virtual void initializeDecoding(int);              // **
-  virtual std::vector<unsigned short> copyData(int); // *
-  virtual void decode(int);     // **
+  // Called by print
+  virtual void printDecoder();  // **
+  virtual void printData();     // *
+
+  virtual void initializeDecoding(config&);              // **
+  virtual std::vector<unsigned short> copyData(config&); // *
+  virtual void decode(config&);     // **
 
   // ** = override. * = optionally override.
 

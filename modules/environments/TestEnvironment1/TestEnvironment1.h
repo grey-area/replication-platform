@@ -4,10 +4,10 @@ class TestEnvironment1 : public BaseEnvironment
 {
  public:
 
-  void interpretBody(int,int,int,int);
-  void updateFitnesses(int);
+  void interpretBody(config&,int,int,int);
+  void updateFitnesses(config&);
 
-  TestEnvironment1(int);
+  TestEnvironment1(config&);
   ~TestEnvironment1();
 
  private:
