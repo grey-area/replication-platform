@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <fstream>
 #include <sstream>
 #include <cstdio>
 #include <getopt.h>
@@ -24,31 +25,58 @@ ostream& operator << (ostream& o, config a)
 
 int parseArguments(int argc, char **argv, config &args)
 {
-  args = {false, false, 100, 100, 100, "BaseModel", "BaseEnvironment"};
+  args = {false, false, 20, 20, 100, "BaseModel", "BaseEnvironment"};
 
   namespace po = boost::program_options;
 
-  string sizeString;
-  // Declare the supported options.
-  po::options_description desc("Allowed options");
-  desc.add_options()
+  // TODO: should I be using these configFile and sizeString variables, or does program_options provide a way?
+  // Should I be using my own struct for arguments?
+  // How best to pass arguments to the modules?
+
+  string configFile;
+  po::options_description commandLineOnly("Command line only");
+  commandLineOnly.add_options()
     ("help,h", "produce help message")
-    ("config,c", po::value<string>(), "specify a configuration file")
-    ("display", "show display")
-    ("debug", "turn on debugging")
-    ("model,m", po::value<string>(&(args.model))->default_value("BaseReplicator"), "specify the reproduction model to use")
-    ("environment,e", po::value<string>(&(args.environment))->default_value("BaseEnvironment"), "specify the environment to use")
-    ("size,s", po::value<string>(&sizeString)->default_value("20x20"), "set the size of the grid")
-    ("time,t", po::value<int>(&(args.simulationTime))->default_value(100))
+    ("config,c", po::value<string>(&configFile), "specify a configuration file")
   ;
 
+  string sizeString;
+  po::options_description commandLineAndConfig("Command line or config. file");
+  commandLineAndConfig.add_options()
+    ("display", "show display")
+    ("debug", "turn on debugging")
+    ("model,m", po::value<string>(&(args.model)), "specify the reproduction model to use")
+    ("environment,e", po::value<string>(&(args.environment)), "specify the environment to use")
+    ("size,s", po::value<string>(&sizeString), "set the size of the grid")
+    ("time,t", po::value<int>(&(args.simulationTime)), "simulation time")
+  ;
+  po::options_description allOptions;
+  allOptions.add(commandLineOnly).add(commandLineAndConfig);
+
   po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, desc), vm);
+  try
+  {
+    po::store(po::parse_command_line(argc, argv, allOptions), vm);
+    po::notify(vm);
+
+    if (vm.count("config"))
+    {
+      ifstream configFileStream(configFile);
+      po::store(po::parse_config_file(configFileStream, commandLineAndConfig), vm);
+      configFileStream.close();
+    }
+  }
+  catch(po::error& e) 
+  { 
+    std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
+    std::cerr << allOptions << std::endl; 
+    return 1; 
+  } 
   po::notify(vm);    
 
   if (vm.count("help"))
   {
-    cout << desc << "\n";
+    cout << allOptions  << "\n";
     return 1;
   }
 
@@ -64,7 +92,7 @@ int parseArguments(int argc, char **argv, config &args)
     args.height = stoi( sizeString.substr(delimPos+1, string::npos) );
 
   }
-  
+
   cout << args << endl;
 
   return 0;
