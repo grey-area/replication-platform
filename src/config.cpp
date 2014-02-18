@@ -8,8 +8,10 @@
 using namespace std;
 
 #include "config.h"
-#include "boost/program_options.hpp" 
 
+// Used to check if string starts with a given substring
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/lexical_cast.hpp>
 
 // Print the program options
 ostream& operator << (ostream& o, config a)
@@ -23,22 +25,72 @@ ostream& operator << (ostream& o, config a)
   o << "  environment:\t" << a.environment << endl;
 }
 
+
+// Given a vector of basic_options, take the unregistered ones whose string_keys begin with "model" or "environment", and put them in the modelConfig or environmentConfig
+void sortUnregisteredOptions(config &args, vector<po::basic_option<char> > options)
+{
+  for(vector<po::basic_option<char> >::iterator opt=options.begin(); opt!=options.end(); ++opt)
+  {
+    if (opt->unregistered)
+    {
+
+      try
+      {
+	// If the string key starts with "model"
+	if (boost::starts_with(opt->string_key, "model-"))
+	{
+	  size_t delimPos = opt->string_key.find("-");
+	  string key = opt->string_key.substr(delimPos+1, string::npos); 
+
+	  // If its a flag option, we'll know it's been set
+	  args.modelConfig[key] = "";
+	  // If it has a value, put it in the map
+	  if ( opt->value.size() > 0 )
+	    args.modelConfig[key] = (*opt).value[0];
+	}
+
+	// If the string key starts with "environment"
+	if (boost::starts_with(opt->string_key, "environment-"))
+	{
+	  size_t delimPos = opt->string_key.find("-");
+	  string key = opt->string_key.substr(delimPos+1, string::npos); 
+
+	  // If its a flag option, we'll know it's been set
+	  args.environmentConfig[key] = "";
+	  // If it has a value, put it in the map
+	  if ( opt->value.size() > 0 )
+	    args.environmentConfig[key] = (*opt).value[0];
+	}
+      }
+      catch(boost::bad_lexical_cast)
+      {
+      }
+
+    }
+  }  
+}
+
+
 // Parse command line and config file
 int parseArguments(int argc, char **argv, config &args)
 {
-  args = {false, false, 20, 20, 100, "BaseModel", "BaseEnvironment"};
+  // Default options
+  args.display = false;
+  args.debug   = false;
+  args.width   = 20;
+  args.height  = 20;
+  args.simulationTime = 100;
+  args.model       = "BaseReplicator";
+  args.environment = "BaseEnvironment";
 
-  namespace po = boost::program_options;
-
-  // Should I be using my own struct for arguments?
-  // How best to pass arguments to the modules?
-
+  // Options that can only be set from the command line
   po::options_description commandLineOnly("Command line only");
   commandLineOnly.add_options()
     ("help,h", "produce help message")
     ("config,c", po::value<string>(), "specify a configuration file")
   ;
 
+  // Options that can be set from the command line or from a config file
   po::options_description commandLineAndConfig("Command line or config. file");
   commandLineAndConfig.add_options()
     ("display", "show display")
@@ -54,37 +106,23 @@ int parseArguments(int argc, char **argv, config &args)
   po::variables_map vm;
   try
   {
-    // Take command line arguments
+    // Parse command line arguments
     po::parsed_options parsed = po::command_line_parser(argc, argv).options(allOptions).allow_unregistered().run();
     po::store(parsed, vm);
     po::notify(vm);
+    // Sort unregistered command line options destined for the model/environment
+    sortUnregisteredOptions(args, parsed.options);
 
-    // Collect unrecognized arguments and their values from the command line
-    /*for(int i=0; i<parsed.options.size(); ++i)
-    {
-      if (parsed.options[i].unregistered)
-	cout << parsed.options[i].string_key << ":" << parsed.options[i].value[0] << endl;
-	}*/
-    vector<string> unrecognized = collect_unrecognized(parsed.options, po::exclude_positional);
-
-    // Take arguments from config file
+    // Parse arguments from config file
     if (vm.count("config"))
     {
       ifstream configFileStream(vm["config"].as<string>());
       po::parsed_options parsed = po::parse_config_file(configFileStream, commandLineAndConfig, true);
       po::store(parsed, vm);
       configFileStream.close();
-
-      // Collect unrecognized arguments from the config file
-      vector<string> unrecognizedConfig = collect_unrecognized(parsed.options, po::exclude_positional);
-      unrecognized.insert(unrecognized.end(), unrecognizedConfig.begin(), unrecognizedConfig.end());
+      // Sort unregistered config options destined for the model/environment
+      sortUnregisteredOptions(args, parsed.options);
     }
-
-    for (vector<string>::iterator it = unrecognized.begin(); it != unrecognized.end(); ++it)
-      cout << *it << ", ";
-    cout << endl;
-
-
   }
   catch(po::error& e) 
   { 
@@ -105,14 +143,21 @@ int parseArguments(int argc, char **argv, config &args)
   if (vm.count("debug"))
     args.debug = true;
 
+  // Some parsing for grid size. We expect string of format "widthxheight".
   if (vm.count("size"))
   {
     string sizeString = vm["size"].as<string>();
     size_t delimPos = sizeString.find("x");
     args.width  = stoi( sizeString.substr(0, delimPos) );
     args.height = stoi( sizeString.substr(delimPos+1, string::npos) );
-
   }
+
+  cout << "Model options:" << endl;
+  for(map<string,string>::iterator it = args.modelConfig.begin(); it!=args.modelConfig.end(); ++it)
+    cout << it->first << ":" << it->second << endl;
+  cout << endl << "Environment options:" << endl;
+  for(map<string,string>::iterator it = args.environmentConfig.begin(); it!=args.environmentConfig.end(); ++it)
+    cout << it->first << ":" << it->second << endl;
 
   cout << args << endl;
 
