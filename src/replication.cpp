@@ -1,17 +1,17 @@
 #include <iostream>
 #include <algorithm>
 #include <time.h>
+#include <fstream>
 
 using namespace std;
-
-//#include "boost/property_tree/ptree.hpp"
-//#include "boost/property_tree/xml_parser.hpp"
 
 #include "config.h"
 #include "misc.h"
 #include "BaseReplicator.h"
 #include "BaseEnvironment.h"
 #include "modelHandler.h"
+
+#include <sys/stat.h>
 
 vector <vector <BaseReplicator* > > grid;
 BaseEnvironment *environment;
@@ -50,22 +50,25 @@ void placeChild(config &args, BaseReplicator *child, int i, int j, int &x, int &
   grid[x][y] = child;
 }
 
-
 // Initialization
 int init(int argc, char **argv, config &args)
 {
-  // TODO: remember I've fixed the seed here
-  srand(0);
-
   // Parse command line arguments, put result in args struct (see arguments.h)
   // args.model is the name of the replication model we'll use
   if ( parseArguments(argc, argv, args) )
     return 1;
-  //cout << args;
-  
-  // TODO: set these from command line / config file?
-  // alphabet size, initial/min/max data size
-  BaseReplicator::setArgs(args.model, 31, 10, 1, 100);
+
+  if (args.seed==-1)
+    args.seed = time(NULL);
+  srand(args.seed);
+
+  setConfigDir(args);
+  // Make the directory in which the results will go
+  _mkdir((args.resultsBaseDir + args.resultsConfigDir).c_str());
+  // Wait to here to write config file, because we want to write the particular seed used
+  writeConfigFile(args);
+
+  BaseReplicator::setArgs(args);
 
   // Initialize a 2D grid of pointers to replicator objects
   grid.resize(args.width);
@@ -88,7 +91,7 @@ int init(int argc, char **argv, config &args)
 
 
 // Main loop
-int loop(config &args, int t)
+int loop(config &args, int t, ofstream &dataFile)
 {
   int headCount = 0;
   float totalFitness = 0.0;
@@ -155,7 +158,7 @@ int loop(config &args, int t)
 
   // TODO what do we want to print/output?
   if(t%20==0)
-    cout << t << "\t" << maxFitness << "\t" << totalFitness/(float)headCount << endl;
+    dataFile << t << "\t" << maxFitness << "\t" << totalFitness/(float)headCount << endl;
 
   // TODO: Periodically save current state and data
 }
@@ -186,9 +189,14 @@ int main(int argc, char **argv)
   if ( init(argc, argv, args) )
     return 0;
 
+  ofstream dataFile;
+  dataFile.open((args.resultsBaseDir + args.resultsConfigDir + "data.dat").c_str());
+
   // Enter the main loop
   for(int t=0; t<args.simulationTime; t++)
-    loop(args, t);
+    loop(args, t, dataFile);
+
+  dataFile.close();
 
   // Free allocated memory
   cleanUp(args);

@@ -12,13 +12,25 @@ int BaseReplicator::initialDataSize;
 int BaseReplicator::minDataSize;
 int BaseReplicator::maxDataSize;
 
-void BaseReplicator::setArgs(string model, int alph, int initData, int minData, int maxData)
+void BaseReplicator::setArgs(config &args)
 {
-  modelName = model;
-  alphabetSize = alph;
-  initialDataSize = initData;
-  minDataSize = minData;
-  maxDataSize = maxData;
+  modelName = args.model;
+  if (args.modelConfig.count("alphabet"))
+    alphabetSize = atoi(args.modelConfig["alphabet"].c_str());
+  else
+    alphabetSize = 31;
+  if (args.modelConfig.count("initial-data-size"))
+    initialDataSize = atoi(args.modelConfig["initial-data-size"].c_str());
+  else
+    initialDataSize = 10;
+  if (args.modelConfig.count("min-data-size"))
+    minDataSize = atoi(args.modelConfig["min-data-size"].c_str());
+  else
+    minDataSize = 1;
+  if (args.modelConfig.count("max-data-size"))
+    maxDataSize = atoi(args.modelConfig["max-data-size"].c_str());
+  else
+    maxDataSize = 100;
 }
 
 BaseReplicator::BaseReplicator(config &args)

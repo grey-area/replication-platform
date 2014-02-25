@@ -1,7 +1,8 @@
 using namespace std;
+#include <iostream>
+
 #include "TestEnvironment1.h"
 
-#include <iostream>
 
 // Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future, and maybe evaluate it now
 void TestEnvironment1::interpretBody(config &args, int x, int y, int t)
@@ -9,7 +10,10 @@ void TestEnvironment1::interpretBody(config &args, int x, int y, int t)
   BaseReplicator *rep = (*grid)[x][y];
   rep->fitness = 0.0;
 
-  int cycle = 1000000;
+  int cycle = 100000;
+  if(args.environmentConfig.count("switching-rate"))
+    cycle = atoi(args.environmentConfig["switching-rate"].c_str());
+
   int toReward = ((t/cycle)%10)+20;
   //int toReward = 20;
 
@@ -47,7 +51,7 @@ void TestEnvironment1::updateFitnesses(config &args)
 }
 
 
-TestEnvironment1::TestEnvironment1(config& args) : BaseEnvironment(args)
+TestEnvironment1::TestEnvironment1(config &args) : BaseEnvironment(args)
 {
 }
 

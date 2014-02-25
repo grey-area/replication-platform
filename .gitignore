@@ -17,3 +17,9 @@ bin
 \#*
 gitstats
 notes
+
+# These files are generated
+replication
+modules/Makefile
+modules/src/modelHandler.cpp
+

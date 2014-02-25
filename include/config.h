@@ -9,6 +9,9 @@ namespace po = boost::program_options;
 
 struct config
 {
+  string       resultsBaseDir;
+  string       resultsConfigDir;
+  int          seed;
   bool         display;
   bool         debug;
   int          width;
@@ -20,8 +23,10 @@ struct config
   map <string, string> environmentConfig;
 };
 
+void setConfigDir(config&);
 ostream& operator << (ostream&, config);
 void sortUnregisteredOptions(config&, vector<po::basic_option<char> >);
+void writeConfigFile(config&);
 int parseArguments(int, char**, config&);
 
 #endif
