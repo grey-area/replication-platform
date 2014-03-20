@@ -4,6 +4,7 @@ using namespace std;
 
 BaseEnvironment::BaseEnvironment(config &args)
 {
+  functionEvaluations = 0;
 }
 
 BaseEnvironment::~BaseEnvironment()

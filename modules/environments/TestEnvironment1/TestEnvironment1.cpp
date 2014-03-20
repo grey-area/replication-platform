@@ -10,7 +10,7 @@ void TestEnvironment1::interpretBody(config &args, int x, int y, int t)
   BaseReplicator *rep = (*grid)[x][y];
   rep->fitness = 0.0;
 
-  int cycle = 100000;
+  int cycle = 1000000;
   if(args.environmentConfig.count("switching-rate"))
     cycle = atoi(args.environmentConfig["switching-rate"].c_str());
 
@@ -19,11 +19,12 @@ void TestEnvironment1::interpretBody(config &args, int x, int y, int t)
 
   // Reward for symbols
   int count = 0;
-  for (vector <unsigned short>::iterator it = rep->bodySpecification.begin(); it!=rep->bodySpecification.end() and count<30; ++it,++count)
+  for (vector <unsigned short>::iterator it = rep->bodySpecification.begin(); it!=rep->bodySpecification.end() and count<300; ++it,++count)
   {
     if (*it == toReward)
       rep->fitness += 1.0;
   }
+  functionEvaluations += 1;
 
   /*// Reward for long gestation (to a point)
   if (rep->gestationTime > 10)

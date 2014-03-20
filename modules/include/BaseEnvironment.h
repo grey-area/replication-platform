@@ -12,6 +12,8 @@ public:
 
   std::vector <std::vector <BaseReplicator*> > *grid;
 
+  int functionEvaluations;
+
   virtual void interpretBody(config&,int,int,int);
   virtual void updateFitnesses(config&);
 

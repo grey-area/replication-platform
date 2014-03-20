@@ -92,7 +92,13 @@ void Grammar1::interpret(config &args, Grammar1 *c)
   } // End of interpretation loop
 
   // Copy the remainder of the decodedData to the child body
-  copy(bodyStart, c->decodedData.end(), back_inserter(c->bodySpecification));
+  //copy(bodyStart, c->decodedData.end(), back_inserter(c->bodySpecification));
+  for(list<unsigned short>::iterator it=bodyStart; it!=c->decodedData.end(); ++it)
+  {
+    if (*it > ruleAlphabet*2)
+      c->bodySpecification.push_back(*it);
+  }
+
 }
 
 

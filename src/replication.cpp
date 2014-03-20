@@ -158,7 +158,7 @@ int loop(config &args, int t, ofstream &dataFile)
 
   // TODO what do we want to print/output?
   if(t%20==0)
-    dataFile << t << "\t" << maxFitness << "\t" << totalFitness/(float)headCount << endl;
+    dataFile << environment->functionEvaluations << "\t" << maxFitness << "\t" << totalFitness/(float)headCount << endl;
 
   // TODO: Periodically save current state and data
 }

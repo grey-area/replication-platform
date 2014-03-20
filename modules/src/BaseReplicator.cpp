@@ -129,6 +129,8 @@ vector<unsigned short> BaseReplicator::copyData(config &args)
 // To override. Iteratively called during the decode cycle.
 void BaseReplicator::decode(config &args)
 {
+  // The default behaviour is that the data and the `phenotype' are the same thing
+  copy(child->data.begin(), child->data.end(), back_inserter(child->bodySpecification));
   state = REPRODUCED;
 }
 
@@ -165,7 +167,7 @@ void BaseReplicator::update(config &args)
       break;
 
     case REPRODUCED:
-
+      
       child->fitness = fitness;
       child->state   = START; // No longer an embryo!
 
