@@ -98,7 +98,7 @@ int loop(config &args, int t, ofstream &dataFile)
   float maxFitness = 0.0;
 
   // Every so often, add new (orphan) entities to one line of the grid
-  if (t%100==0)
+  if (t%100==99)
     newEntities(args);
 
   // If fitnesses are periodically updated, update them
