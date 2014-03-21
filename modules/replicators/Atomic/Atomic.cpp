@@ -149,6 +149,8 @@ void Atomic::decode(config &args)
   // If we've finished executing
   if (ip == code.end())
   {
+    state=REPRODUCED;
+
     int separator[] = {40,40,40};    
     vector<unsigned int>::iterator separatorLocation = search(output.begin(), output.end(), separator, separator+3);
 
