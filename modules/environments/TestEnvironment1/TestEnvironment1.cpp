@@ -14,8 +14,8 @@ void TestEnvironment1::interpretBody(config &args, int x, int y, int t)
   if(args.environmentConfig.count("switching-rate"))
     cycle = atoi(args.environmentConfig["switching-rate"].c_str());
 
-  //int toReward = ((t/cycle)%10)+20;
-  int toReward = 10;
+  int toReward = ((t/cycle)%5)+3;
+  //int toReward = 3;
   //int toReward = 20;
 
   // Reward for symbols
