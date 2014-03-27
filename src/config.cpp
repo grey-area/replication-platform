@@ -209,9 +209,6 @@ int parseArguments(int argc, char **argv, config &args)
     return 1;
   }
 
-  if (args.resultsBaseDir=="./results/default/")
-    cout << "Warning: results directory not set, putting results in ./results/default." << endl;
-
   if (vm.count("display"))
     args.display = true;
   if (vm.count("debug"))
@@ -219,6 +216,9 @@ int parseArguments(int argc, char **argv, config &args)
 
   if (vm.count("dir"))
     args.resultsBaseDir = string("./results/") + vm["dir"].as<string>() + "/";
+
+  if (args.resultsBaseDir=="./results/default/")
+    cout << "Warning: results directory not set, putting results in ./results/default." << endl;
 
   // Some parsing for grid size. We expect string of format "widthxheight".
   if (vm.count("size"))

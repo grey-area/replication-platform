@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include "config.h"
+#include <fstream>
 
 #ifndef BASEREPLICATOR_H
 #define BASEREPLICATOR_H
@@ -29,7 +30,9 @@ public:
 
   std::vector<unsigned short> data;
   std::vector<unsigned short> bodySpecification;
+
   float fitness;
+  float score;
 
   BaseReplicator* child;
 
@@ -40,7 +43,7 @@ public:
   void newEntity(config&);
 
   // For printing decoder and data
-  void print();
+  void print(ofstream&);
 
   void update(config&);
 
@@ -51,8 +54,8 @@ public:
   virtual void newDecoder(config&); // **
 
   // Called by print
-  virtual void printDecoder();  // **
-  virtual void printData();     // *
+  virtual void printDecoder(ofstream&);  // **
+  virtual void printData(ofstream&);     // *
 
   virtual void initializeDecoding(config&);              // **
   virtual std::vector<unsigned short> copyData(config&); // *

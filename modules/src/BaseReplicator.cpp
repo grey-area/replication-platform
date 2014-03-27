@@ -42,6 +42,7 @@ BaseReplicator::BaseReplicator(config &args)
   gestationTime = 0;
 
   fitness = 0.0;
+  score   = 0.0;
   child = NULL;
 }
 
@@ -55,25 +56,27 @@ BaseReplicator::~BaseReplicator()
 }
 
 
-void BaseReplicator::printDecoder()
+void BaseReplicator::printDecoder(ofstream &stream)
 {
 }
 
 // TODO needs to be more general. Return a string rather than printing to cout?
-void BaseReplicator::printData()
+void BaseReplicator::printData(ofstream &stream)
 {
+  stream << "Data:" << endl;
   for (vector<unsigned short>::iterator it = data.begin() ; it != data.end(); ++it)
-    cout << *it << ",";
-  cout << endl;
+    stream << *it << " ";
+  stream << endl << "Body specification:" << endl;
+  for (vector<unsigned short>::iterator it = bodySpecification.begin(); it != bodySpecification.end(); ++it)
+    stream << *it << " ";
+  stream << endl;
 }
 
-void BaseReplicator::print()
+void BaseReplicator::print(ofstream &stream)
 {
-  cout << "ID: " << id << endl;
-  cout << "Decoder:" << endl;
-  printDecoder();
-  cout << "Data:" << endl;
-  printData();
+  printDecoder(stream);
+  printData(stream);
+  stream << endl << endl;
 }
 
 
@@ -111,15 +114,15 @@ vector<unsigned short> BaseReplicator::copyData(config &args)
 {
   vector<unsigned short> dataCopy (data);
 
-  // TODO: I changed the probablities
+  // TODO decision. How to mutate. Min max size
   // Insert with probability 0.5
-  if (rand()%20==0 and data.size() < maxDataSize)
+  if (rand()%2==0 and data.size() < maxDataSize)
     dataCopy.insert(dataCopy.begin()+rand()%(dataCopy.size()), rand()%alphabetSize);
   // Delete with probability 0.5
-  if (rand()%20==0 and data.size() > minDataSize)
+  if (rand()%2==0 and data.size() > minDataSize)
     dataCopy.erase(dataCopy.begin()+rand()%(dataCopy.size()));
   // Change with probability 0.5
-  if (rand()%20==0)
+  if (rand()%2==0)
     dataCopy.at(rand()%(dataCopy.size())) = rand()%alphabetSize;
 
   return dataCopy;
@@ -169,6 +172,7 @@ void BaseReplicator::update(config &args)
     case REPRODUCED:
       
       child->fitness = fitness;
+      child->score   = score;
       child->state   = START; // No longer an embryo!
 
       state          = START; // Finished reproduction cycle

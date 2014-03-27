@@ -19,32 +19,40 @@ public:
     }
 };
 
+#define LOOPY     0
+#define UNLOOPY   1
+#define GA        2
+
 class L1 : public BaseReplicator
 {
 public:
+
+  void printDecoder(ofstream &stream);
+
   L1(config &args);
   ~L1();
 
  private:
 
-  unsigned short alphabet;
-  unsigned int initWorkingDataSize;
+  unsigned short type;
+
+  unsigned int initProductionRuleSize;
   unsigned int maxWorkingDataSize;
 
   unsigned short workingDataFrame;
   vector<vector<unsigned short> > workingData;
 
+  vector<unsigned short> productionRuleSpecification; // for use by the non-loopy only
   map<triple, vector<unsigned short> > productionRules;
   vector<vector<unsigned short> > partPunctuationMarks;
   vector<vector<unsigned short> > rulePunctuationMarks;
 
   bool changedOnLastPass;
 
-  void printDecoder();
-
   void newDecoder(config&);
   void initializeDecoding(config&);
 
+  void buildProductionRules(config&, vector<unsigned short>::iterator, vector<unsigned short>::iterator, map<triple, vector<unsigned short> >&);
   void interpret(config&, vector<unsigned short>);
   void decode(config&);
 

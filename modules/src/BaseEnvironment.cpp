@@ -16,6 +16,8 @@ BaseEnvironment::~BaseEnvironment()
 void BaseEnvironment::interpretBody(config &args, int x, int y, int t)
 {
   (*grid)[x][y]->fitness = 0.0;
+  (*grid)[x][y]->score   = 0.0;
+  functionEvaluations += 1;
 }
 
 // Maybe evaluate the fitnesses of every entity

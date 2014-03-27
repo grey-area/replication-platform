@@ -16,6 +16,8 @@ using namespace std;
 vector <vector <BaseReplicator* > > grid;
 BaseEnvironment *environment;
 
+float result = 0.0;
+
 // Put some brand new (orphan) entities on the grid. Periodically called.
 void newEntities(config &args)
 {
@@ -92,11 +94,11 @@ int init(int argc, char **argv, config &args)
 
 
 // Main loop
-int loop(config &args, int t, ofstream &dataFile)
+int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofstream &reproducerFile)
 {
   int headCount = 0;
-  float totalFitness = 0.0;
-  float maxFitness = 0.0;
+  float totalScore = 0.0;
+  float maxScore = 0.0;
 
   // Every so often, add new (orphan) entities to one line of the grid
   if (t%100==99)
@@ -114,18 +116,30 @@ int loop(config &args, int t, ofstream &dataFile)
       if (grid[i][j]) // If there is an entity there
       {
 	headCount++;
-	totalFitness += grid[i][j]->fitness;
-	if (grid[i][j]->fitness > maxFitness)
-	  maxFitness = grid[i][j]->fitness;
+	totalScore += grid[i][j]->score;
+	if (grid[i][j]->score > maxScore)
+	  maxScore = grid[i][j]->score;
 
-	// TODO: this is a very simple way of rewarding higher fitness (tournament selection between x,y and x-1,y) Replace.
-	int i2 = mod((i-1), args.width);
-	int ip = (grid[i2][j] and grid[i2][j]->fitness > grid[i][j]->fitness ? i2 : i);
-	BaseReplicator *entity = grid[ip][j];
+	// Tournament selection between this entity and one of its neighbours. Selection determines who gets executed next
+	int i2 = mod(i + rand()%3 - 1, args.width);
+	int j2;
+	if (i2==i)
+	  j2 = mod(j + (rand()%2==0 ? 1 : -1), args.height);
+	else
+	  j2 = mod(j + rand()%3 - 1, args.height);
+	int ie = i;
+	int je = j;
+	if (grid[i2][j2] and grid[i2][j2]->fitness > grid[i][j]->fitness)
+	{
+	  ie = i2;
+	  je = j2;
+	}
+	
+	BaseReplicator *entity = grid[ie][je];
 
 	// TODO: what do I want to be printed when debugging?
-	if (args.debug)
-	  cout << "Updating " << ip << "," << j << endl;
+	//if (args.debug)
+	//  cout << "Updating " << ip << "," << j << endl;
 
 	// Update the entity. See BaseReplicator.cpp to see update cycle. Most time will be spent calling the decode function
 	// which is implemented by a subclass of BaseReplicator
@@ -148,7 +162,7 @@ int loop(config &args, int t, ofstream &dataFile)
 
 	  // Send the child's body specification to the task environment, and place the child on the grid
 	  int x,y;
-	  placeChild(args, child, ip, j, x, y);
+	  placeChild(args, child, ie, je, x, y);
 	  environment->interpretBody(args, x, y, t);
 
 	}
@@ -158,8 +172,22 @@ int loop(config &args, int t, ofstream &dataFile)
   } // end of row update
 
   // TODO what do we want to print/output?
-  if(t%20==0)
-    dataFile << environment->functionEvaluations << "\t" << maxFitness << "\t" << totalFitness/(float)headCount << "\t" << headCount << endl;
+  if(t-lastT1 > 2000)
+  {
+    dataFile << environment->functionEvaluations << "\t" << maxScore << "\t" << totalScore/(float)headCount << "\t" << headCount << endl;
+    lastT1 = t;
+  }
+  if(t-lastT2 > 20000)
+  {
+    if (grid[0][0])
+    {
+      reproducerFile << "Function evaluations:" << environment->functionEvaluations << endl;
+      grid[0][0]->print(reproducerFile);
+    }
+    lastT2 = t;
+  }
+
+  result += totalScore/(float)headCount;
 
   // TODO: Periodically save current state and data
 }
@@ -191,12 +219,22 @@ int main(int argc, char **argv)
     return 0;
 
   ofstream dataFile;
-  dataFile.open((args.resultsBaseDir + args.resultsConfigDir + "data.dat").c_str());
+  dataFile.open((args.resultsBaseDir + args.resultsConfigDir + "time.dat").c_str());
+  ofstream reproducerFile;
+  reproducerFile.open((args.resultsBaseDir + args.resultsConfigDir + "reproducers.dat").c_str());
 
   // Enter the main loop
-  for(int t=0; t<args.simulationTime; t++)
-    loop(args, t, dataFile);
+  //for(int t=0; t<args.simulationTime; t++)
+  int lastFunctionEvaluations1 = 0;
+  int lastFunctionEvaluations2 = 0;
+  while(environment->functionEvaluations < args.simulationTime)
+    loop(args, environment->functionEvaluations, lastFunctionEvaluations1, lastFunctionEvaluations2, dataFile, reproducerFile);
 
+  dataFile.close();
+  reproducerFile.close();
+
+  dataFile.open((args.resultsBaseDir + args.resultsConfigDir + "data.dat").c_str());
+  dataFile << "integralOfScore = " << result;
   dataFile.close();
 
   // Free allocated memory

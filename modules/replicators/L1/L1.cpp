@@ -2,15 +2,30 @@ using namespace std;
 #include <iostream>
 #include "L1.h"
 
-void L1::printDecoder()
+void L1::printDecoder(ofstream &stream)
 {
+    stream << endl << "Production rules:" << endl;
+    for(map<triple, vector<unsigned short> >::iterator it = productionRules.begin(); it != productionRules.end(); ++it)
+    {
+      stream <<  it->first.x << "<" << it->first.y << ">" << it->first.z << " -> ";
+      for(vector<unsigned short>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+	stream << *it2 << " ";
+      stream << endl;
+    }
 }
 
 // Create a new decoder, for an `orphan' cell
 void L1::newDecoder(config &args)
 {
-  // Initial decoder is empty, so implicitly rewrites everything to itself
   productionRules.clear();
+
+  if (not (args.modelConfig.count("type") and args.modelConfig["type"] == "ga"))
+  {
+    for(int i=0; i<initProductionRuleSize*5; ++i)
+      productionRuleSpecification.push_back(rand()%alphabetSize);
+  
+    buildProductionRules(args, productionRuleSpecification.begin(), productionRuleSpecification.end(), productionRules);
+  }
 }
 
 
@@ -28,6 +43,32 @@ void L1::initializeDecoding(config &args)
 }
 
 
+void L1::buildProductionRules(config &args, vector<unsigned short>::iterator it, vector<unsigned short>::iterator decoderEnd, map<triple, vector<unsigned short> > &target)
+{
+  // Build child's production rules from the stuff before the punctuation mark
+  while (decoderEnd-it >= 3) // While there are enough symbols left to make the LHS of a production rule
+  {
+    triple LHS = {*it, *(it+1), *(it+2)};
+    it += 3;
+    vector<unsigned short>::iterator ruleEnd = decoderEnd;
+    unsigned int punctuationSize = 0;
+    // todo search for earliest instance of any punctuation mark, instead of the earliest instance of the first one we check
+    for (vector<vector<unsigned short> >::iterator p = rulePunctuationMarks.begin(); p != rulePunctuationMarks.end(); ++p)
+    {
+      ruleEnd = search(it, decoderEnd, p->begin(), p->end());
+      if (ruleEnd != decoderEnd)
+      {
+	punctuationSize = p->size();
+	break;
+      }
+    }
+    vector<unsigned short> RHS;
+    copy(it, ruleEnd, back_inserter(RHS));
+    target[LHS] = RHS;
+    it = ruleEnd + punctuationSize;
+  }
+}
+
 
 // 1. Split the unpacked data into two parts, one of which specifies the production rules of the next generation, and the other of which specifies whatever else the environment requires
 // 2. Build rules from the first part
@@ -35,74 +76,91 @@ void L1::interpret(config &args, vector<unsigned short> unpackedData)
 {
   L1 *c = (L1*)child; 
 
-  /*cout << "Final working data:" << endl;
-  for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
-    cout << *it << " ";
-  cout << endl << endl;
-
-  cout << id << " produced child " << c->id << endl;*/
-
-  // Look for a part punctuation mark
   vector<unsigned short>::iterator decoderEnd = unpackedData.end();
   unsigned int punctuationSize = 0;
-  // todo search for earliest instance of any punctuation mark, instead of the earliest instance of the first one we check
-  for (vector<vector<unsigned short> >::iterator p = partPunctuationMarks.begin(); p != partPunctuationMarks.end(); ++p)
+  // If loopy model, split the result into a specification of production rules and specification of the body
+  if (type == LOOPY)
   {
-    decoderEnd = search(unpackedData.begin(), unpackedData.end(), p->begin(), p->end());
-    if (decoderEnd != unpackedData.end())
-      punctuationSize = p->size();
+    // Look for a part punctuation mark
+    // todo search for earliest instance of any punctuation mark, instead of the earliest instance of the first one we check
+    for (vector<vector<unsigned short> >::iterator p = partPunctuationMarks.begin(); p != partPunctuationMarks.end(); ++p)
+    {
+      decoderEnd = search(unpackedData.begin(), unpackedData.end(), p->begin(), p->end());
+      if (decoderEnd != unpackedData.end())
+	punctuationSize = p->size();
+    }
   }
+  else // If unloopy model, the whole unpacked data specifies the body
+    decoderEnd = unpackedData.begin();
 
   // Copy the stuff after the punctuation mark to the child's body specification
   c->bodySpecification.clear();
   copy(decoderEnd+punctuationSize, unpackedData.end(), back_inserter(c->bodySpecification));
-
-  /*
-  if (c->bodySpecification.size() > 0)
+  
+  // If loopy, build the production rules using the stuff before the punctuation mark
+  if (type == LOOPY)
+    buildProductionRules(args, unpackedData.begin(), decoderEnd, c->productionRules);
+  else if (type == UNLOOPY) // else copy our production rules specification to the child, mutated
   {
-    cout << "Child's body specification:" << endl;
-    for(vector<unsigned short>::iterator it=c->bodySpecification.begin(); it!=c->bodySpecification.end(); ++it)
+    copy(productionRuleSpecification.begin(), productionRuleSpecification.end(), back_inserter(c->productionRuleSpecification));
+
+    // Mutate the production rules  TODO decision. How to mutate, min/max size
+    if (rand()%2==0 and c->productionRuleSpecification.size() < initProductionRuleSize*10)
+      c->productionRuleSpecification.insert(c->productionRuleSpecification.begin()+rand()%(c->productionRuleSpecification.size()), rand()%alphabetSize);
+    // Delete with probability 0.5
+    if (rand()%2==0 and c->productionRuleSpecification.size() > 0)
+      c->productionRuleSpecification.erase(c->productionRuleSpecification.begin()+rand()%(c->productionRuleSpecification.size()));
+    // Change with probability 0.5
+    if (rand()%2==0)
+      c->productionRuleSpecification.at(rand()%(c->productionRuleSpecification.size())) = rand()%alphabetSize;
+
+    c->buildProductionRules(args, c->productionRuleSpecification.begin(), c->productionRuleSpecification.end(), c->productionRules);
+  }
+
+
+  // Debugging
+  if(args.modelConfig.count("debug"))
+  {
+    cout << "Final working data:" << endl;
+    for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
       cout << *it << " ";
-    cout << endl;
-  }
-  */
+    cout << endl << endl;
 
-  /*
-  cout << "Child's production rule specification:" << endl;
-  for(vector<unsigned short>::iterator it=unpackedData.begin(); it!=decoderEnd; ++it)
-    cout << *it << " ";
-    cout << endl;
-  */
-
-  // Build child's production rules from the stuff before the punctuation mark
-  vector<unsigned short>::iterator it = unpackedData.begin();
-  while (decoderEnd-it >= 3) // While there are enough symbols left to make the LHS of a production rule
-  {
-    triple LHS = {*it, *(it+1), *(it+2)};
-    it += 3;
-    vector<unsigned short>::iterator ruleEnd = decoderEnd;
-    punctuationSize = 0;
-    // todo search for earliest instance of any punctuation mark, instead of the earliest instance of the first one we check
-    for (vector<vector<unsigned short> >::iterator p = rulePunctuationMarks.begin(); p != rulePunctuationMarks.end(); ++p)
+    cout << id << " produced child " << c->id << endl;
+  
+    if (c->bodySpecification.size() > 0)
     {
-      ruleEnd = search(it, decoderEnd, p->begin(), p->end());
-      if (ruleEnd != decoderEnd)
-	punctuationSize = p->size();
+      cout << "Child's body specification:" << endl;
+      for(vector<unsigned short>::iterator it=c->bodySpecification.begin(); it!=c->bodySpecification.end(); ++it)
+	cout << *it << " ";
+      cout << endl;
     }
-    vector<unsigned short> RHS;
-    copy(it, ruleEnd, back_inserter(RHS));
-    c->productionRules[LHS] = RHS;
-    it = ruleEnd + punctuationSize;
-  }
 
-  /*cout << "Child's production rules:" << endl;
-  for(map<triple, vector<unsigned short> >::iterator it = c->productionRules.begin(); it != c->productionRules.end(); ++it)
-  {
-    cout <<  it->first.x << "<" << it->first.y << ">" << it->first.z << " -> ";
-    for(vector<unsigned short>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      cout << *it2 << " ";
+    cout << "Child's production rule specification:" << endl;
+    if (type == LOOPY)
+    {
+      for(vector<unsigned short>::iterator it=unpackedData.begin(); it!=decoderEnd; ++it)
+	cout << *it << " ";
+    }
+    else
+    {
+      for(vector<unsigned short>::iterator it=c->productionRuleSpecification.begin(); it!=c->productionRuleSpecification.end(); ++it)
+	cout << *it << " ";      
+    }
     cout << endl;
-    }*/
+
+    cout << "Child's production rules:" << endl;
+    for(map<triple, vector<unsigned short> >::iterator it = c->productionRules.begin(); it != c->productionRules.end(); ++it)
+    {
+      cout <<  it->first.x << "<" << it->first.y << ">" << it->first.z << " -> ";
+      for(vector<unsigned short>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+	cout << *it2 << " ";
+      cout << endl;
+    }
+  } // End of debugging
+
+  // Check if the parent and child have identical production rules
+  //bool identical = false;
 
 }
 
@@ -113,25 +171,32 @@ void L1::decode(config &args)
 {
   L1 *c = (L1*)child;
 
-  /*cout << "I am " << id << " producing child " << c->id << endl;
-  cout << "Data:" << endl;
-  for(vector<unsigned short>::iterator it=data.begin(); it!=data.end(); ++it)
-    cout << *it << " ";
-  cout << endl << "Child's data:" << endl;
-  for(vector<unsigned short>::iterator it=c->data.begin(); it!=c->data.end(); ++it)
-    cout << *it << " ";
-  cout << endl << "Production rules:" << endl;
-  for(map<triple, vector<unsigned short> >::iterator it = productionRules.begin(); it != productionRules.end(); ++it)
+  // Debugging
+  if(args.modelConfig.count("debug"))
   {
-    cout <<  it->first.x << "<" << it->first.y << ">" << it->first.z << " -> ";
-    for(vector<unsigned short>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      cout << *it2 << " ";
-    cout << endl;
-  }
-  cout << "Working data:" << endl;
-  for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
-    cout << *it << " ";
-    cout << endl << endl;*/
+    cout << "I am " << id << " producing child " << c->id << endl;
+    cout << "Data:" << endl;
+    for(vector<unsigned short>::iterator it=data.begin(); it!=data.end(); ++it)
+      cout << *it << " ";
+    cout << endl << "Child's data:" << endl;
+    for(vector<unsigned short>::iterator it=c->data.begin(); it!=c->data.end(); ++it)
+      cout << *it << " ";
+    cout << endl << "Production rule specification:" << endl;
+    for(vector<unsigned short>::iterator it = productionRuleSpecification.begin(); it != productionRuleSpecification.end(); ++it)
+      cout << *it << " ";
+    cout << endl << "Production rules:" << endl;
+    for(map<triple, vector<unsigned short> >::iterator it = productionRules.begin(); it != productionRules.end(); ++it)
+    {
+      cout <<  it->first.x << "<" << it->first.y << ">" << it->first.z << " -> ";
+      for(vector<unsigned short>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+	cout << *it2 << " ";
+      cout << endl;
+    }
+    cout << "Working data:" << endl;
+    for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
+      cout << *it << " ";
+    cout << endl << endl;
+  } // End of debugging
 
   changedOnLastPass = false;
   workingData.at(1-workingDataFrame).clear();
@@ -157,7 +222,6 @@ void L1::decode(config &args)
     else
     {
       triple t = {*(it-1),*it,*(it+1)};
-      //cout << "Testing triplet " << t.x << " " << t.y << " " << t.z << endl;
 
       // if there is no such production rule
       map<triple, vector<unsigned short> >::iterator productionRule = productionRules.find(t);
@@ -171,10 +235,15 @@ void L1::decode(config &args)
 	changedOnLastPass = true;
 	// Insert from the production rule
 	copy(productionRule->second.begin(), productionRule->second.end(), back_inserter(workingData.at(1-workingDataFrame)));	
-	/*cout << "Replacing " << *it << " with ";
+
+	// Debugging
+	if(args.modelConfig.count("debug"))
+	{
+	cout << "Replacing " << *it << " with ";
 	for(vector<unsigned short>::iterator it2=productionRule->second.begin(); it2!=productionRule->second.end(); ++it2)
 	  cout << *it2 << " ";
-	  cout << endl;*/
+	cout << endl;
+	} // End debugging
       }
     }
   }
@@ -182,10 +251,13 @@ void L1::decode(config &args)
   // Switch the frames
   workingDataFrame = 1-workingDataFrame;
 
-  /*cout << "Working data after one pass:" << endl;
-  for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
-    cout << *it << " ";
-    cout << endl << endl;*/
+  if(args.modelConfig.count("debug"))
+  {
+    cout << "Working data after one pass:" << endl;
+    for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
+      cout << *it << " ";
+    cout << endl << endl;
+  }
 
   if (not changedOnLastPass) 
   {
@@ -193,13 +265,21 @@ void L1::decode(config &args)
     state=REPRODUCED;
   }
 
-  //cout << endl;
-
 }
 
 L1::L1(config &args) : BaseReplicator(args)
 {
-  maxWorkingDataSize  = maxDataSize *100;
+  type = LOOPY;
+  if ( args.modelConfig.count("type") )
+  {
+    if (args.modelConfig["type"] == "ga")
+      type = GA;
+    else if (args.modelConfig["type"] == "unloopy")
+      type = UNLOOPY;
+  }
+
+  initProductionRuleSize = initialDataSize * 5;
+  maxWorkingDataSize  = maxDataSize * 100;
 
   workingDataFrame = 0;
   vector<unsigned short> workingData1;
@@ -209,6 +289,8 @@ L1::L1(config &args) : BaseReplicator(args)
 
   partPunctuationMarks.push_back({1,1});
   rulePunctuationMarks.push_back({0,0});
+  rulePunctuationMarks.push_back({2,2});
+  rulePunctuationMarks.push_back({3,3});
 }
 
 L1::~L1()
