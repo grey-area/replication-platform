@@ -21,7 +21,7 @@ void TestEnvironment1::interpretBody(config &args, int x, int y, int t)
 
   // Reward for symbols
   int count = 0;
-  for (vector <unsigned short>::iterator it = rep->bodySpecification.begin(); it!=rep->bodySpecification.end() and count<50; ++it,++count)
+  for (vector <unsigned short>::iterator it = rep->bodySpecification.begin(); it!=rep->bodySpecification.end() and count<150; ++it,++count)
   {
     if (*it == toReward)
     {

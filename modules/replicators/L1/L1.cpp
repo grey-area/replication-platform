@@ -28,7 +28,8 @@ void L1::newDecoder(config &args)
 
   if (not (args.modelConfig.count("type") and args.modelConfig["type"] == "ga"))
   {
-    for(int i=0; i<initProductionRuleSize*5; ++i)
+    unsigned int s = rand()%(initProductionRuleSize-10) + 10;
+    for(int i=0; i<s; ++i)
       productionRuleSpecification.push_back(rand()%alphabetSize);
   
     buildProductionRules(args, productionRuleSpecification.begin(), productionRuleSpecification.end(), productionRules);
@@ -240,7 +241,37 @@ void L1::decode(config &args)
     else
     {
       triple t = {*(it-1),*it,*(it+1)};
-      map<triple, vector<unsigned short> >::iterator productionRule = productionRules.find(t);
+      map<triple, vector<unsigned short> >::iterator productionRule = productionRules.end();
+
+      // Treat a '3' on the left or right as a wildcard symbol
+      if (args.modelConfig.count("wildcard"))
+      {
+	if (t.x == 3)
+	{
+	  triple t2 = t;
+	  for (int i=0; i<alphabetSize; ++i)
+	  {
+	    t2.x = i;
+	    productionRule = productionRules.find(t2);
+	    if (productionRule != productionRules.end())
+	      break;
+	  }
+	}
+	if (t.z == 3 and productionRule == productionRules.end())
+	{
+	  triple t2 = t;
+	  for (int i=0; i<alphabetSize; ++i)
+	  {
+	    t2.z = i;
+	    productionRule = productionRules.find(t2);
+	    if (productionRule != productionRules.end())
+	      break;
+	  }
+	}
+      }
+
+      if (productionRule == productionRules.end())
+	productionRule = productionRules.find(t);
 
       // if there is no such production rule
       if (productionRule == productionRules.end())

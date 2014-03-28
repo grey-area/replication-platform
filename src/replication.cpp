@@ -16,7 +16,12 @@ using namespace std;
 vector <vector <BaseReplicator* > > grid;
 BaseEnvironment *environment;
 
-float result = 0.0;
+float wholeResult = 0.0;
+unsigned long wholeResultCount = 0;
+float decilesResult [10] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+unsigned long decilesResultCount [10] = {0,0,0,0,0,0,0,0,0,0};
+float quartilesResult [4] = {0.0,0.0,0.0,0.0};
+unsigned long quartilesResultCount [4] = {0,0,0,0};
 
 // Put some brand new (orphan) entities on the grid. Periodically called.
 void newEntities(config &args)
@@ -176,6 +181,14 @@ int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofst
   {
     dataFile << environment->functionEvaluations << "\t" << maxScore << "\t" << totalScore/(float)headCount << "\t" << headCount << endl;
     lastT1 = t;
+
+    wholeResult += totalScore/(float)headCount;
+    wholeResultCount += 1;
+    decilesResult[(environment->functionEvaluations * 10) / args.simulationTime] += totalScore/(float)headCount;
+    decilesResultCount[(environment->functionEvaluations * 10) / args.simulationTime] += 1;
+    quartilesResult[(environment->functionEvaluations * 4) / args.simulationTime] += totalScore/(float)headCount;
+    quartilesResultCount[(environment->functionEvaluations * 4) / args.simulationTime] +=  1;
+
   }
   if(t-lastT2 > 20000)
   {
@@ -186,8 +199,6 @@ int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofst
     }
     lastT2 = t;
   }
-
-  result += totalScore/(float)headCount;
 
   // TODO: Periodically save current state and data
 }
@@ -233,8 +244,16 @@ int main(int argc, char **argv)
   dataFile.close();
   reproducerFile.close();
 
+
+  int i;
   dataFile.open((args.resultsBaseDir + args.resultsConfigDir + "data.dat").c_str());
-  dataFile << "integralOfScore = " << result;
+  dataFile << "avgFitness = " << wholeResult/wholeResultCount << endl;
+  for(i=0; i<10; ++i)
+    dataFile << "avgFitnessDec" << i << " = " << decilesResult[i] / decilesResultCount[i] << endl;
+  for(i=0; i<4; ++i)
+    dataFile << "avgFitnessQuart" << i << " = " << quartilesResult[i] / quartilesResultCount[i] << endl;
+  dataFile << "avgFitnessDec9Minus0 = " << decilesResult[9]/decilesResultCount[9] - decilesResult[0]/decilesResultCount[0] << endl;
+  dataFile << "avgFitnessQuart3Minus0 = " << quartilesResult[3]/quartilesResultCount[3] - quartilesResult[0]/quartilesResultCount[0] << endl;
   dataFile.close();
 
   // Free allocated memory
