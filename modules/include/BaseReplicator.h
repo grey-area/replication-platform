@@ -45,6 +45,7 @@ public:
   // For printing decoder and data
   void print(ofstream&);
 
+  virtual std::vector<unsigned short> copyData(config&); // *
   void update(config&);
 
  private:
@@ -58,7 +59,6 @@ public:
   virtual void printData(ofstream&);     // *
 
   virtual void initializeDecoding(config&);              // **
-  virtual std::vector<unsigned short> copyData(config&); // *
   virtual void decode(config&);     // **
 
   // ** = override. * = optionally override.

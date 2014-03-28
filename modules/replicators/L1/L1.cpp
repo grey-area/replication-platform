@@ -2,6 +2,13 @@ using namespace std;
 #include <iostream>
 #include "L1.h"
 
+/*
+  Flags:
+  - noisy-development
+  - half-decoder
+
+ */
+
 void L1::printDecoder(ofstream &stream)
 {
     stream << endl << "Production rules:" << endl;
@@ -38,7 +45,11 @@ void L1::initializeDecoding(config &args)
   workingData.at(1).clear();
 
   // Copy child's data to my working data
-  copy(child->data.begin(), child->data.end(), back_inserter(workingData.at(workingDataFrame)));
+  // If this flag is set, introduce non-heritable variation at the start of development
+  if (args.modelConfig.count("noisy-development"))
+    workingData.at(workingDataFrame) = child->copyData(args);
+  else
+    copy(child->data.begin(), child->data.end(), back_inserter(workingData.at(workingDataFrame)));
 
 }
 
@@ -83,9 +94,16 @@ void L1::interpret(config &args, vector<unsigned short> unpackedData)
   {
     // Look for a part punctuation mark
     // todo search for earliest instance of any punctuation mark, instead of the earliest instance of the first one we check
+    // todo I don't think this works if we've got more than one part punctuation mark. Look at the implementation of the rule punctuation searching below
     for (vector<vector<unsigned short> >::iterator p = partPunctuationMarks.begin(); p != partPunctuationMarks.end(); ++p)
     {
-      decoderEnd = search(unpackedData.begin(), unpackedData.end(), p->begin(), p->end());
+      vector<unsigned short>::iterator searchBegin;
+      // If this flag is set, at least half of the unpacked data specifies a decoder, so we only look for the punctuation mark in the second half
+      if (args.modelConfig.count("half-decoder"))
+	searchBegin = unpackedData.begin() + unpackedData.size()/2;
+      else
+	searchBegin = unpackedData.begin();
+      decoderEnd = search(searchBegin, unpackedData.end(), p->begin(), p->end());
       if (decoderEnd != unpackedData.end())
 	punctuationSize = p->size();
     }
@@ -222,10 +240,9 @@ void L1::decode(config &args)
     else
     {
       triple t = {*(it-1),*it,*(it+1)};
-
-      // if there is no such production rule
       map<triple, vector<unsigned short> >::iterator productionRule = productionRules.find(t);
 
+      // if there is no such production rule
       if (productionRule == productionRules.end())
       {
 	workingData.at(1-workingDataFrame).push_back(*it);
