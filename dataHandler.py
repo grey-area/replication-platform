@@ -1,5 +1,6 @@
 '''
 A program to take results from many runs and collates them
+Takes independent variables from config file, and dependent variables from data file
 '''
 
 import sys, os

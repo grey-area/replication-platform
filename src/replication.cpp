@@ -16,7 +16,8 @@ using namespace std;
 vector <vector <BaseReplicator* > > grid;
 BaseEnvironment *environment;
 
-float windowAverage = 0.0;
+float window1Average = 0.0;
+float window2Average = 0.0;
 float wholeResult = 0.0;
 float decilesResult [10] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 float quartilesResult [4] = {0.0,0.0,0.0,0.0};
@@ -97,7 +98,7 @@ int init(int argc, char **argv, config &args)
 
 
 // Main loop
-int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofstream &reproducerFile)
+int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFile2, ofstream &reproducerFile)
 {
   int headCount = 0;
   float totalScore = 0.0;
@@ -170,15 +171,19 @@ int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofst
 	  placeChild(args, child, ie, je, x, y);
 	  environment->interpretBody(args, x, y, t);
 
-	  /*windowAverage += child->fitness;
+	  window1Average += child->fitness;
+	  window2Average += child->fitness;
 	  // TODO temp
-	  if (environment->functionEvaluations - lastT1 == 200000)
+	  if ((environment->functionEvaluations) % (args.width*args.height) == 0)
 	  {
-	    dataFile << environment->functionEvaluations << "\t" << windowAverage/200000.0 << endl;
-	    lastT1 = environment->functionEvaluations;
-	    windowAverage = 0.0;
+	    dataFile1 << environment->functionEvaluations << "\t" << window1Average/(args.width*args.height) << endl;
+	    window1Average = 0.0;
 	  }
-	  */
+	  if ((environment->functionEvaluations) % 100000 == 0)
+	  {
+	    dataFile2 << environment->functionEvaluations - 50000 << "\t" << window2Average/100000.0 << endl;
+	    window2Average = 0.0;
+	  }
 
 	  wholeResult += child->fitness;
 	  decilesResult[(environment->functionEvaluations * 10) / args.simulationTime] += child->fitness;
@@ -193,20 +198,21 @@ int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofst
 
   // TODO what do we want to print/output?
   // TODO replaced with temp above
-  if(t-lastT1 > 2000) 
+  /*  if(t-lastT1 > 2000) 
   {
     dataFile << environment->functionEvaluations << "\t" << maxScore << "\t" << totalScore/(float)headCount << "\t" << headCount << "\t" << totalGestationTime/(float)headCount << endl;
     lastT1 = t;
   }
+  */
 
-  if(t-lastT2 > 20000)
+  if(t-lastT > 20000)
   {
     if (grid[0][0])
     {
       reproducerFile << "Function evaluations:" << environment->functionEvaluations << endl;
       grid[0][0]->print(reproducerFile);
     }
-    lastT2 = t;
+    lastT = t;
   }
 
   // TODO: Periodically save current state and data
@@ -238,34 +244,35 @@ int main(int argc, char **argv)
   if ( init(argc, argv, args) )
     return 0;
 
-  ofstream dataFile;
-  dataFile.open((args.resultsBaseDir + args.resultsConfigDir + "time.dat").c_str());
+  ofstream dataFile1, dataFile2;
+  dataFile1.open((args.resultsBaseDir + args.resultsConfigDir + "time1.dat").c_str());
+  dataFile2.open((args.resultsBaseDir + args.resultsConfigDir + "time2.dat").c_str());
   ofstream reproducerFile;
   reproducerFile.open((args.resultsBaseDir + args.resultsConfigDir + "reproducers.dat").c_str());
 
   // Enter the main loop
   //for(int t=0; t<args.simulationTime; t++)
-  int lastFunctionEvaluations1 = 0;
-  int lastFunctionEvaluations2 = 0;
+  int lastFunctionEvaluations = 0;
   while(environment->functionEvaluations < args.simulationTime)
   {
-    loop(args, environment->functionEvaluations, lastFunctionEvaluations1, lastFunctionEvaluations2, dataFile, reproducerFile);
+    loop(args, environment->functionEvaluations, lastFunctionEvaluations, dataFile1, dataFile2, reproducerFile);
   }
 
-  dataFile.close();
+  dataFile1.close();
+  dataFile2.close();
   reproducerFile.close();
 
 
   int i;
-  dataFile.open((args.resultsBaseDir + args.resultsConfigDir + "data.dat").c_str());
-  dataFile << "avgFitness = " << wholeResult/args.simulationTime << endl;
+  dataFile1.open((args.resultsBaseDir + args.resultsConfigDir + "data.dat").c_str());
+  dataFile1 << "avgFitness = " << wholeResult/args.simulationTime << endl;
   for(i=0; i<10; ++i)
-    dataFile << "avgFitnessDec" << i << " = " << decilesResult[i] / (args.simulationTime/10) << endl;
+    dataFile1 << "avgFitnessDec" << i << " = " << decilesResult[i] / (args.simulationTime/10) << endl;
   for(i=0; i<4; ++i)
-    dataFile << "avgFitnessQuart" << i << " = " << quartilesResult[i] / (args.simulationTime/4) << endl;
-  dataFile << "avgFitnessDec9Minus0 = " << (decilesResult[9] - decilesResult[0]) / (args.simulationTime/10) << endl;
-  dataFile << "avgFitnessQuart3Minus0 = " << (quartilesResult[3] - quartilesResult[0]) / (args.simulationTime/4) << endl;
-  dataFile.close();
+    dataFile1 << "avgFitnessQuart" << i << " = " << quartilesResult[i] / (args.simulationTime/4) << endl;
+  dataFile1 << "avgFitnessDec9Minus0 = " << (decilesResult[9] - decilesResult[0]) / (args.simulationTime/10) << endl;
+  dataFile1 << "avgFitnessQuart3Minus0 = " << (quartilesResult[3] - quartilesResult[0]) / (args.simulationTime/4) << endl;
+  dataFile1.close();
 
   // Free allocated memory
   cleanUp(args);

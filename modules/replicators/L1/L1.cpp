@@ -126,12 +126,17 @@ void L1::interpret(config &args, vector<unsigned short> unpackedData)
 
     // Mutate the production rules  TODO decision. How to mutate, min/max size
     if (rand()%2==0 and c->productionRuleSpecification.size() < initProductionRuleSize*10)
-      c->productionRuleSpecification.insert(c->productionRuleSpecification.begin()+rand()%(c->productionRuleSpecification.size()), rand()%alphabetSize);
+    {
+      if (c->productionRuleSpecification.size() == 0)
+	c->productionRuleSpecification.push_back(rand()%alphabetSize);
+      else
+	c->productionRuleSpecification.insert(c->productionRuleSpecification.begin()+rand()%(c->productionRuleSpecification.size()), rand()%alphabetSize);
+    }
     // Delete with probability 0.5
     if (rand()%2==0 and c->productionRuleSpecification.size() > 0)
       c->productionRuleSpecification.erase(c->productionRuleSpecification.begin()+rand()%(c->productionRuleSpecification.size()));
     // Change with probability 0.5
-    if (rand()%2==0)
+    if (rand()%2==0 and c->productionRuleSpecification.size() > 0)
       c->productionRuleSpecification.at(rand()%(c->productionRuleSpecification.size())) = rand()%alphabetSize;
 
     c->buildProductionRules(args, c->productionRuleSpecification.begin(), c->productionRuleSpecification.end(), c->productionRules);
