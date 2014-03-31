@@ -19,6 +19,7 @@ void L1::printDecoder(ofstream &stream)
 	stream << *it2 << " ";
       stream << endl;
     }
+    stream << "Gestation time: " << gestationTime << endl;
 }
 
 // Create a new decoder, for an `orphan' cell
@@ -226,6 +227,7 @@ void L1::decode(config &args)
     // if we're over the working data limit, stop unpacking
     if (workingData.at(1-workingDataFrame).size() > maxWorkingDataSize)
     {
+      workingData.at(1-workingDataFrame).erase(workingData.at(1-workingDataFrame).begin()+maxWorkingDataSize, workingData.at(1-workingDataFrame).end());
       changedOnLastPass = false;
       break;
     }
@@ -327,7 +329,7 @@ L1::L1(config &args) : BaseReplicator(args)
   }
 
   initProductionRuleSize = initialDataSize * 5;
-  maxWorkingDataSize  = maxDataSize * 100;
+  maxWorkingDataSize  = maxDataSize * 10;
 
   workingDataFrame = 0;
   vector<unsigned short> workingData1;

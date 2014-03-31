@@ -143,15 +143,14 @@ void BaseReplicator::decode(config &args)
 void BaseReplicator::update(config &args)
 {
   age++;
-  gestationTime++;
 
   switch(state)
   {
     case START:
 
       // Create new child
-      gestationTime = 0;
       child = newModel(args);
+      child->gestationTime = 0;
 
       // Copy data to child
       child->data = copyData(args);
@@ -165,6 +164,7 @@ void BaseReplicator::update(config &args)
       // Subclass implements this. When it's finished decoding, we expect it to
       // change state to REPRODUCED, and to have given the child a decoding function
       // and body specification
+      child->gestationTime++;
       decode(args);
 
       break;

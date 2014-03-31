@@ -16,12 +16,10 @@ using namespace std;
 vector <vector <BaseReplicator* > > grid;
 BaseEnvironment *environment;
 
+float windowAverage = 0.0;
 float wholeResult = 0.0;
-unsigned long wholeResultCount = 0;
 float decilesResult [10] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-unsigned long decilesResultCount [10] = {0,0,0,0,0,0,0,0,0,0};
 float quartilesResult [4] = {0.0,0.0,0.0,0.0};
-unsigned long quartilesResultCount [4] = {0,0,0,0};
 
 // Put some brand new (orphan) entities on the grid. Periodically called.
 void newEntities(config &args)
@@ -104,12 +102,14 @@ int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofst
   int headCount = 0;
   float totalScore = 0.0;
   float maxScore = 0.0;
+  int totalGestationTime = 0;
 
   // Every so often, add new (orphan) entities to one line of the grid
   if (t%100==99)
     newEntities(args);
 
   // If fitnesses are periodically updated, update them
+  // TODO: wholeResult, decilesResult and quartilesResult don't count these updated fitnesses
   environment->updateFitnesses(args);
 
   // Call update on each replicator periodically
@@ -121,6 +121,7 @@ int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofst
       if (grid[i][j]) // If there is an entity there
       {
 	headCount++;
+	totalGestationTime += grid[i][j]->gestationTime;
 	totalScore += grid[i][j]->score;
 	if (grid[i][j]->score > maxScore)
 	  maxScore = grid[i][j]->score;
@@ -141,7 +142,6 @@ int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofst
 	}
 	
 	BaseReplicator *entity = grid[ie][je];
-
 	// TODO: what do I want to be printed when debugging?
 	//if (args.debug)
 	//  cout << "Updating " << ip << "," << j << endl;
@@ -170,6 +170,21 @@ int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofst
 	  placeChild(args, child, ie, je, x, y);
 	  environment->interpretBody(args, x, y, t);
 
+	  /*windowAverage += child->fitness;
+	  // TODO temp
+	  if (environment->functionEvaluations - lastT1 == 200000)
+	  {
+	    dataFile << environment->functionEvaluations << "\t" << windowAverage/200000.0 << endl;
+	    lastT1 = environment->functionEvaluations;
+	    windowAverage = 0.0;
+	  }
+	  */
+
+	  wholeResult += child->fitness;
+	  decilesResult[(environment->functionEvaluations * 10) / args.simulationTime] += child->fitness;
+	  quartilesResult[(environment->functionEvaluations * 4) / args.simulationTime] +=  child->fitness;
+
+
 	}
 
       } // end of if entity exists check
@@ -177,19 +192,13 @@ int loop(config &args, int t, int &lastT1, int &lastT2, ofstream &dataFile, ofst
   } // end of row update
 
   // TODO what do we want to print/output?
-  if(t-lastT1 > 2000)
+  // TODO replaced with temp above
+  if(t-lastT1 > 2000) 
   {
-    dataFile << environment->functionEvaluations << "\t" << maxScore << "\t" << totalScore/(float)headCount << "\t" << headCount << endl;
+    dataFile << environment->functionEvaluations << "\t" << maxScore << "\t" << totalScore/(float)headCount << "\t" << headCount << "\t" << totalGestationTime/(float)headCount << endl;
     lastT1 = t;
-
-    wholeResult += totalScore/(float)headCount;
-    wholeResultCount += 1;
-    decilesResult[(environment->functionEvaluations * 10) / args.simulationTime] += totalScore/(float)headCount;
-    decilesResultCount[(environment->functionEvaluations * 10) / args.simulationTime] += 1;
-    quartilesResult[(environment->functionEvaluations * 4) / args.simulationTime] += totalScore/(float)headCount;
-    quartilesResultCount[(environment->functionEvaluations * 4) / args.simulationTime] +=  1;
-
   }
+
   if(t-lastT2 > 20000)
   {
     if (grid[0][0])
@@ -239,7 +248,9 @@ int main(int argc, char **argv)
   int lastFunctionEvaluations1 = 0;
   int lastFunctionEvaluations2 = 0;
   while(environment->functionEvaluations < args.simulationTime)
+  {
     loop(args, environment->functionEvaluations, lastFunctionEvaluations1, lastFunctionEvaluations2, dataFile, reproducerFile);
+  }
 
   dataFile.close();
   reproducerFile.close();
@@ -247,13 +258,13 @@ int main(int argc, char **argv)
 
   int i;
   dataFile.open((args.resultsBaseDir + args.resultsConfigDir + "data.dat").c_str());
-  dataFile << "avgFitness = " << wholeResult/wholeResultCount << endl;
+  dataFile << "avgFitness = " << wholeResult/args.simulationTime << endl;
   for(i=0; i<10; ++i)
-    dataFile << "avgFitnessDec" << i << " = " << decilesResult[i] / decilesResultCount[i] << endl;
+    dataFile << "avgFitnessDec" << i << " = " << decilesResult[i] / (args.simulationTime/10) << endl;
   for(i=0; i<4; ++i)
-    dataFile << "avgFitnessQuart" << i << " = " << quartilesResult[i] / quartilesResultCount[i] << endl;
-  dataFile << "avgFitnessDec9Minus0 = " << decilesResult[9]/decilesResultCount[9] - decilesResult[0]/decilesResultCount[0] << endl;
-  dataFile << "avgFitnessQuart3Minus0 = " << quartilesResult[3]/quartilesResultCount[3] - quartilesResult[0]/quartilesResultCount[0] << endl;
+    dataFile << "avgFitnessQuart" << i << " = " << quartilesResult[i] / (args.simulationTime/4) << endl;
+  dataFile << "avgFitnessDec9Minus0 = " << (decilesResult[9] - decilesResult[0]) / (args.simulationTime/10) << endl;
+  dataFile << "avgFitnessQuart3Minus0 = " << (quartilesResult[3] - quartilesResult[0]) / (args.simulationTime/4) << endl;
   dataFile.close();
 
   // Free allocated memory
