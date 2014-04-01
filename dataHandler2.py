@@ -16,6 +16,16 @@ def main():
         mean2 = {}
         stds1 = {}
         stds2 = {}
+        perc5_1 = {}
+        perc5_2 = {}
+        perc95_1 = {}
+        perc95_2 = {}
+        perc25_1 = {}
+        perc25_2 = {}
+        perc50_1 = {}
+        perc50_2 = {}
+        perc75_1 = {}
+        perc75_2 = {}
         times1 = []
         times2 = []
 
@@ -39,6 +49,17 @@ def main():
                 mean2[name] = []
                 stds1[name] = []
                 stds2[name] = []
+                perc5_1[name] = []
+                perc25_1[name] = []
+                perc50_1[name] = []
+                perc75_1[name] = []
+                perc95_1[name] = []
+                perc5_2[name] = []
+                perc25_2[name] = []
+                perc50_2[name] = []
+                perc75_2[name] = []
+                perc95_2[name] = []
+
                 for path2, subpath2, files2 in os.walk(path+'/run'):
                     if files2 != [] and "time1.dat" in files2 and "time2.dat" in files2:
                         thisData1 = []
@@ -66,6 +87,17 @@ def main():
                 mean2[name] = data2[name].mean(axis=0)
                 stds1[name] = data1[name].std(axis=0)
                 stds2[name] = data2[name].std(axis=0)
+                perc5_1[name]  = np.percentile(data1[name], 5, axis=0)
+                perc5_2[name]  = np.percentile(data2[name], 5, axis=0)
+                perc25_1[name] = np.percentile(data1[name], 25, axis=0)
+                perc25_2[name] = np.percentile(data2[name], 25, axis=0)
+                perc50_1[name] = np.percentile(data1[name], 50, axis=0)
+                perc50_2[name] = np.percentile(data2[name], 50, axis=0)
+                perc75_1[name] = np.percentile(data1[name], 75, axis=0)
+                perc75_2[name] = np.percentile(data2[name], 75, axis=0)
+                perc95_1[name] = np.percentile(data1[name], 95, axis=0)
+                perc95_2[name] = np.percentile(data2[name], 95, axis=0)
+
 
         with open(experimentDirectory + "time1.dat",'w') as f:
             f.write("t")
@@ -74,6 +106,16 @@ def main():
                 f.write(name + '_mean')
                 f.write('\t')
                 f.write(name + '_std')
+                f.write('\t')
+                f.write(name + '_5')
+                f.write('\t')
+                f.write(name + '_25')
+                f.write('\t')
+                f.write(name + '_50')
+                f.write('\t')
+                f.write(name + '_75')
+                f.write('\t')
+                f.write(name + '_95')
             f.write('\n')
             for e,time in enumerate(times1):
                 f.write(str(time))
@@ -82,6 +124,16 @@ def main():
                     f.write(str(mean1[name][e]))
                     f.write('\t')
                     f.write(str(stds1[name][e]))
+                    f.write('\t')
+                    f.write(str(perc5_1[name][e]))
+                    f.write('\t')
+                    f.write(str(perc25_1[name][e]))
+                    f.write('\t')
+                    f.write(str(perc50_1[name][e]))
+                    f.write('\t')
+                    f.write(str(perc75_1[name][e]))
+                    f.write('\t')
+                    f.write(str(perc95_1[name][e]))
                 f.write('\n')
         with open(experimentDirectory + "time2.dat",'w') as f:
             f.write("t")
@@ -90,6 +142,16 @@ def main():
                 f.write(name + '_mean')
                 f.write('\t')
                 f.write(name + '_std')
+                f.write('\t')
+                f.write(name + '_5')
+                f.write('\t')
+                f.write(name + '_25')
+                f.write('\t')
+                f.write(name + '_50')
+                f.write('\t')
+                f.write(name + '_75')
+                f.write('\t')
+                f.write(name + '_95')
             f.write('\n')
             for e,time in enumerate(times2):
                 f.write(str(time))
@@ -98,6 +160,16 @@ def main():
                     f.write(str(mean2[name][e]))
                     f.write('\t')
                     f.write(str(stds2[name][e]))
+                    f.write('\t')
+                    f.write(str(perc5_2[name][e]))
+                    f.write('\t')
+                    f.write(str(perc25_2[name][e]))
+                    f.write('\t')
+                    f.write(str(perc50_2[name][e]))
+                    f.write('\t')
+                    f.write(str(perc75_2[name][e]))
+                    f.write('\t')
+                    f.write(str(perc95_2[name][e]))
                 f.write('\n')
 
         '''with open(experimentDirectory + "results.dat",'w') as f:

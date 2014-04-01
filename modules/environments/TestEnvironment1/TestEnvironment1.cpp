@@ -15,7 +15,8 @@ void TestEnvironment1::interpretBody(config &args, int x, int y, int t)
   if(args.environmentConfig.count("switching-rate"))
     cycle = atoi(args.environmentConfig["switching-rate"].c_str());
 
-  int toReward = ((t/cycle)%5)+3;
+  // Changed so that '3' is never rewarded, as '33' is used as a punctation mark in the L1 loopy model
+  int toReward = ((t/cycle)%5)+4;
   //int toReward = 3;
   //int toReward = 20;
 
