@@ -143,6 +143,14 @@ void L1::interpret(config &args, vector<unsigned short> unpackedData)
   }
 
 
+  // If there hasn't been a mutation, check if the parent and child are identical
+  if (not (child->identical == 2))
+  {
+    if (productionRules.size() == c->productionRules.size() and equal(productionRules.begin(), productionRules.end(), c->productionRules.begin()) )
+      child->identical = 1;
+  }
+
+
   // Debugging
   if(args.modelConfig.count("debug"))
   {

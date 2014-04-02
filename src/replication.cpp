@@ -21,6 +21,9 @@ float window2Average = 0.0;
 float wholeResult = 0.0;
 float decilesResult [10] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 float quartilesResult [4] = {0.0,0.0,0.0,0.0};
+int window1Reproducers = 0;
+int window1NonMutations = 0;
+int window1GestationTime = 0;
 
 // Put some brand new (orphan) entities on the grid. Periodically called.
 void newEntities(config &args)
@@ -172,12 +175,25 @@ int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFil
 	  environment->interpretBody(args, x, y, t);
 
 	  window1Average += child->fitness;
+	  window1GestationTime += child->gestationTime;
+	  if (not (child->identical == 2))
+	  {
+	    window1NonMutations ++;
+	    if (child->identical == 1)
+	      window1Reproducers ++;
+	  }
 	  window2Average += child->fitness;
 	  // TODO temp
 	  if ((environment->functionEvaluations) % (args.width*args.height) == 0)
 	  {
-	    dataFile1 << environment->functionEvaluations << "\t" << window1Average/(args.width*args.height) << endl;
+	    if (window1Reproducers==0)
+	      window1NonMutations = 1;
+
+	    dataFile1 << environment->functionEvaluations << "\t" << window1Average/(args.width*args.height) << "\t" << window1GestationTime/(float)(args.width*args.height) << "\t" << window1Reproducers/(float)window1NonMutations << endl;
 	    window1Average = 0.0;
+	    window1Reproducers = 0;
+	    window1NonMutations = 0;
+	    window1GestationTime = 0;
 	  }
 	  if ((environment->functionEvaluations) % 100000 == 0)
 	  {
@@ -207,10 +223,10 @@ int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFil
 
   if(t-lastT > 20000)
   {
-    if (grid[0][0])
+    if (grid[args.width/2][args.height/2])
     {
       reproducerFile << "Function evaluations:" << environment->functionEvaluations << endl;
-      grid[0][0]->print(reproducerFile);
+      grid[args.width/2][args.height/2]->print(reproducerFile);
     }
     lastT = t;
   }

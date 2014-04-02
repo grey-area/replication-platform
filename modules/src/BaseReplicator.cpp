@@ -40,6 +40,7 @@ BaseReplicator::BaseReplicator(config &args)
   state   = EMBRYO;
   age     = 0;
   gestationTime = 0;
+  identical = 0;
 
   fitness = 0.0;
   score   = 0.0;
@@ -117,13 +118,22 @@ vector<unsigned short> BaseReplicator::copyData(config &args)
   // TODO decision. How to mutate. Min max size
   // Insert with probability 0.5
   if (rand()%2==0 and data.size() < maxDataSize)
+  {
     dataCopy.insert(dataCopy.begin()+rand()%(dataCopy.size()), rand()%alphabetSize);
+    child->identical = 2;
+  }
   // Delete with probability 0.5
   if (rand()%2==0 and data.size() > minDataSize)
+  {
     dataCopy.erase(dataCopy.begin()+rand()%(dataCopy.size()));
+    child->identical = 2;
+  }
   // Change with probability 0.5
   if (rand()%2==0)
+  {
     dataCopy.at(rand()%(dataCopy.size())) = rand()%alphabetSize;
+    child->identical = 2;
+  }
 
   return dataCopy;
 }
