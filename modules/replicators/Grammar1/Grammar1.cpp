@@ -4,15 +4,16 @@ using namespace std;
 #include "Grammar1.h"
 
 
-void Grammar1::printDecoder()
+void Grammar1::printDecoder(ofstream &stream)
 {
   int rule = 0;
+  stream << "Rewrite rules:" << endl;
   for (vector <vector <unsigned short> >::iterator it = rules.begin() ; it != rules.end(); ++it,++rule)
   {
-    cout << rule << " -> ";
+    stream << rule << " -> ";
     for (vector <unsigned short>::iterator r = it->begin(); r!=it->end(); ++r)
-      cout << *r << ",";
-    cout << endl;
+      stream << *r << ",";
+    stream << endl;
   }
 }
 
@@ -97,6 +98,12 @@ void Grammar1::interpret(config &args, Grammar1 *c)
   {
     if (*it > ruleAlphabet*2)
       c->bodySpecification.push_back(*it);
+  }
+
+  if (not (child->identical == 2))
+  {
+    if (rules == c->rules)
+      child->identical = 1;
   }
 
 }

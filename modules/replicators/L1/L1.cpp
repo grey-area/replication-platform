@@ -58,6 +58,7 @@ void L1::initializeDecoding(config &args)
 
 void L1::buildProductionRules(config &args, vector<unsigned short>::iterator it, vector<unsigned short>::iterator decoderEnd, map<triple, vector<unsigned short> > &target)
 {
+  vector<unsigned short>::iterator decoderStart = it;
   // Build child's production rules from the stuff before the punctuation mark
   while (decoderEnd-it >= 3) // While there are enough symbols left to make the LHS of a production rule
   {
@@ -68,11 +69,11 @@ void L1::buildProductionRules(config &args, vector<unsigned short>::iterator it,
     // todo search for earliest instance of any punctuation mark, instead of the earliest instance of the first one we check
     for (vector<vector<unsigned short> >::iterator p = rulePunctuationMarks.begin(); p != rulePunctuationMarks.end(); ++p)
     {
-      ruleEnd = search(it, decoderEnd, p->begin(), p->end());
-      if (ruleEnd != decoderEnd)
+      vector<unsigned short>::iterator ruleEnd2 = search(it, decoderEnd, p->begin(), p->end());
+      if (ruleEnd2 - decoderStart < ruleEnd - decoderStart)
       {
-	punctuationSize = p->size();
-	break;
+	ruleEnd = ruleEnd2;
+	punctuationSize = p->end() - p->begin();
       }
     }
     vector<unsigned short> RHS;
@@ -354,6 +355,12 @@ L1::L1(config &args) : BaseReplicator(args)
   rulePunctuationMarks.push_back({0,0});
   rulePunctuationMarks.push_back({2,2});
   rulePunctuationMarks.push_back({3,3});
+  rulePunctuationMarks.push_back({0,2});
+  rulePunctuationMarks.push_back({0,3});
+  rulePunctuationMarks.push_back({2,0});
+  rulePunctuationMarks.push_back({2,3});
+  rulePunctuationMarks.push_back({3,0});
+  rulePunctuationMarks.push_back({3,2});
 }
 
 L1::~L1()

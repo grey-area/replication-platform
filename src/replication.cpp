@@ -174,6 +174,12 @@ int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFil
 	  placeChild(args, child, ie, je, x, y);
 	  environment->interpretBody(args, x, y, t);
 
+	  if (child->printCount>0)
+	  {
+	    reproducerFile << "Function evaluations:" << environment->functionEvaluations << endl;
+	    child->print(reproducerFile);
+	  }
+
 	  window1Average += child->fitness;
 	  window1GestationTime += child->gestationTime;
 	  if (not (child->identical == 2))
@@ -225,8 +231,7 @@ int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFil
   {
     if (grid[args.width/2][args.height/2])
     {
-      reproducerFile << "Function evaluations:" << environment->functionEvaluations << endl;
-      grid[args.width/2][args.height/2]->print(reproducerFile);
+      grid[args.width/2][args.height/2]->printCount=10;
     }
     lastT = t;
   }

@@ -5,6 +5,8 @@ class Grammar1 : public BaseReplicator
 {
  public:
 
+  void printDecoder(ofstream &stream);
+
   Grammar1(config&);
   ~Grammar1();
 
@@ -16,8 +18,6 @@ class Grammar1 : public BaseReplicator
   list<unsigned short>::iterator prevIt;
   bool prevChanged;
   void interpret(config&, Grammar1*);
-
-  void printDecoder();
 
   void newDecoder(config&);
   void initializeDecoding(config&);

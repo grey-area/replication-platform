@@ -28,6 +28,8 @@ public:
   unsigned int age;
   unsigned int gestationTime;
   unsigned int identical; // 0 = not identical to parent, 1 = is identical, 2 = there was a mutation, so we're not going to check
+  unsigned int printCount;
+  int parentID;
 
   std::vector<unsigned short> data;
   std::vector<unsigned short> bodySpecification;

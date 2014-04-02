@@ -45,6 +45,7 @@ BaseReplicator::BaseReplicator(config &args)
   fitness = 0.0;
   score   = 0.0;
   child = NULL;
+  printCount = 0;
 }
 
 BaseReplicator::~BaseReplicator()
@@ -64,6 +65,7 @@ void BaseReplicator::printDecoder(ofstream &stream)
 // TODO needs to be more general. Return a string rather than printing to cout?
 void BaseReplicator::printData(ofstream &stream)
 {
+  stream << "ID: " << id << "  Parent ID: " << parentID << endl;
   stream << "Data:" << endl;
   for (vector<unsigned short>::iterator it = data.begin() ; it != data.end(); ++it)
     stream << *it << " ";
@@ -71,6 +73,8 @@ void BaseReplicator::printData(ofstream &stream)
   for (vector<unsigned short>::iterator it = bodySpecification.begin(); it != bodySpecification.end(); ++it)
     stream << *it << " ";
   stream << endl;
+  stream << "Gestation time: " << gestationTime << endl;
+  stream << "Print count: " << printCount << endl;
 }
 
 void BaseReplicator::print(ofstream &stream)
@@ -160,6 +164,7 @@ void BaseReplicator::update(config &args)
 
       // Create new child
       child = newModel(args);
+      child->parentID = id;
       child->gestationTime = 0;
 
       // Copy data to child
@@ -186,6 +191,12 @@ void BaseReplicator::update(config &args)
       child->state   = START; // No longer an embryo!
 
       state          = START; // Finished reproduction cycle
+
+      if (printCount > 0)
+      {
+	child->printCount = printCount-1;
+	printCount = 0;
+      }
       
       break;
 
