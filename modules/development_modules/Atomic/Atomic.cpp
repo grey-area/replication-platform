@@ -2,6 +2,11 @@ using namespace std;
 #include <iostream>
 #include "Atomic.h"
 
+/*
+  Implemented a language based on Slash/A (based on Avida) to use as a development mechanism.
+  Didn't really work. Pick up again at some point?
+ */
+
 void Atomic::printDecoder()
 {
 }

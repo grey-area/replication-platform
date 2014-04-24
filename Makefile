@@ -5,7 +5,7 @@ all: directories replication
 directories:
 	mkdir -p build
 
-replication: build/replication.o build/config.o build/misc.o $(shell pwd)/modules/lib/replicators.so
+replication: build/replication.o build/config.o build/misc.o $(shell pwd)/modules/lib/modules.so
 	g++ -O3 $(LDFLAGS) $^ -o $@ -lboost_program_options; rm build -rf
 
 build/replication.o: ./src/replication.cpp
@@ -17,7 +17,7 @@ build/config.o: ./src/config.cpp ./include/config.h
 build/misc.o: ./src/misc.cpp ./include/misc.h
 	g++ -O3 -I./include/ -fpic -c $< -o $@
 
-$(shell pwd)/modules/lib/replicators.so:
+$(shell pwd)/modules/lib/modules.so:
 	cd modules; make
 
 clean:

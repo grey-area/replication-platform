@@ -2,6 +2,12 @@ using namespace std;
 #include <iostream>
 #include "Slash.h"
 
+/*
+  This was an attempt to use the Slash/A language as the development mechanism. Didn't really work.
+  Pick up again at some point?
+
+ */
+
 void Slash::printDecoder()
 {
 }

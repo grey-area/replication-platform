@@ -9,7 +9,7 @@ using namespace std;
 #include "misc.h"
 #include "BaseReplicator.h"
 #include "BaseEnvironment.h"
-#include "modelHandler.h"
+#include "model_handler.h"
 
 #include <sys/stat.h>
 

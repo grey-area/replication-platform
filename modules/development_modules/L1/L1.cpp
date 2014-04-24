@@ -3,6 +3,12 @@ using namespace std;
 #include "L1.h"
 
 /*
+  Development model based on context-sensitive L-systems.
+  Each organism has a set of production rules of the form A<B>C -> DEF. The production rules are applied to the genome until no more rules can be applied.
+  When development is finished, the result is the specification of the offspring's production rules and `solution' (These parts are separated by the `AA' symbol sequence.
+  The production rule specification is read as follows. The first three symbols make the LHS. All following symbols up to but not including a punctuation symbol sequence
+  make the RHS. The specification of the next rule starts after the punctuation.
+
   Flags:
   - noisy-development
   - half-decoder

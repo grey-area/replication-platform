@@ -17,19 +17,17 @@ remEnv = 6
 state  = main
 
 
-
-
-makefile1 = """all: directories lib/replicators.so
+makefile1 = """all: directories lib/modules.so
 
 directories:
 	mkdir -p build; mkdir -p lib
 
-lib/replicators.so: build/modelHandler.o """
+lib/modules.so: build/model_handler.o """
 
 makefile2 = """build/BaseReplicator.o build/BaseEnvironment.o
 	g++ -O3 -shared $^ -o $@
 
-build/modelHandler.o: ./src/modelHandler.cpp ./include/modelHandler.h """
+build/model_handler.o: ./src/model_handler.cpp ./include/model_handler.h """
 
 makefile3 = """../include/config.h
 	g++ -O3 -std=c++11 -I/home/andrew/local/boost_1_55_0/installed/include -I./include/ -I../include/ """
@@ -55,13 +53,13 @@ makefileLine = """
 
 modelHandler1 = """using namespace std;
 #include <iostream>
-#include "modelHandler.h"
+#include "model_handler.h"
 
-// Replicators
+// Development modules
 """
 
 modelHandler2 = """
-// Environments
+// Environment modules
 """
 
 modelHandler3 = """
@@ -116,39 +114,39 @@ modelHandler7 = """  else
 
 
 
-stateText = ["What to do?\n\n[1] - add a module\n[2] - remove a module\n[3] - `recompile'\n[4] - exit\n\n", "Add a module\n\n[1] - reproduction module\n[2] - environment module\n[3] - back\n[4] - exit\n\n", "Remove a module\n\n[1] - reproduction module\n[2] - environment module\n[3] - back\n[4] - exit\n\n", "Add a reproduction module\n\nEnter module name: ", "Add an environment module\n\nEnter module name: ", "Remove a reproduction module\n\n", "Remove an environment module\n\n"]
+stateText = ["What to do?\n\n[1] - add a module\n[2] - remove a module\n[3] - `recompile'\n[4] - exit\n\n", "Add a module\n\n[1] - development module\n[2] - environment module\n[3] - back\n[4] - exit\n\n", "Remove a module\n\n[1] - development module\n[2] - environment module\n[3] - back\n[4] - exit\n\n", "Add a reproduction module\n\nEnter module name: ", "Add an environment module\n\nEnter module name: ", "Remove a reproduction module\n\n", "Remove an environment module\n\n"]
 
-reproductionModules = []
-with open('./replicators/replicators', 'r') as replicatorsFile:
-    reproductionModules = [line.rstrip('\n') for line in replicatorsFile.readlines()]
+developmentModules = []
+with open('./development_modules/development_module_list', 'r') as developmentFile:
+    developmentModules = [line.rstrip('\n') for line in developmentFile.readlines()]
 environmentModules = []
-with open('./environments/environments', 'r') as environmentsFile:
-    environmentModules = [line.rstrip('\n') for line in environmentsFile.readlines()]
+with open('./environment_modules/environment_module_list', 'r') as environmentFile:
+    environmentModules = [line.rstrip('\n') for line in environmentFile.readlines()]
 
 def recompile():
 
     # Rewrite makefile
     makefileString = makefile1
-    for module in reproductionModules:
+    for module in developmentModules:
         makefileString += "build/" + module + ".o "
     for module in environmentModules:
         makefileString += "build/" + module + ".o "
     makefileString += makefile2
-    for module in reproductionModules:
-        makefileString += "./replicators/" + module + "/" + module + ".h "
+    for module in developmentModules:
+        makefileString += "./development_modules/" + module + "/" + module + ".h "
     for module in environmentModules:
-        makefileString += "./environments/" + module + "/" + module + ".h "
+        makefileString += "./environment_modules/" + module + "/" + module + ".h "
     makefileString += makefile3
-    for module in reproductionModules:
-        makefileString += "-I./replicators/" + module + " "
+    for module in developmentModules:
+        makefileString += "-I./development_modules/" + module + " "
     for module in environmentModules:
-        makefileString += "-I./environments/" + module + " "
+        makefileString += "-I./environment_modules/" + module + " "
     makefileString += makefile4
-    for module in reproductionModules:
-        makefileString += "build/" + module + ".o: ./replicators/" + module + "/" + module + ".cpp ./replicators/" + module + "/" + module + ".h ./include/BaseReplicator.h"
+    for module in developmentModules:
+        makefileString += "build/" + module + ".o: ./development_modules/" + module + "/" + module + ".cpp ./development_modules/" + module + "/" + module + ".h ./include/BaseReplicator.h"
         makefileString += makefileLine
     for module in environmentModules:
-        makefileString += "build/" + module + ".o: ./environments/" + module + "/" + module + ".cpp ./environments/" + module + "/" + module + ".h ./include/BaseEnvironment.h"
+        makefileString += "build/" + module + ".o: ./environment_modules/" + module + "/" + module + ".cpp ./environment_modules/" + module + "/" + module + ".h ./include/BaseEnvironment.h"
         makefileString += makefileLine
     makefileString += makefile5
 
@@ -157,16 +155,16 @@ def recompile():
 
     # Rewrite modelHandler
     modelHandlerString = modelHandler1
-    for module in reproductionModules:
+    for module in developmentModules:
         modelHandlerString += "#include \"" + module + ".h\"\n"
     modelHandlerString += modelHandler2
     for module in environmentModules:
         modelHandlerString += "#include \"" + module + ".h\"\n"
     modelHandlerString += modelHandler3
-    for module in reproductionModules:
+    for module in developmentModules:
         modelHandlerString += "  else if (args.model==\"" + module + "\")\n    m = new " + module + "(args);\n"
     modelHandlerString += modelHandler4
-    for module in reproductionModules:
+    for module in developmentModules:
         modelHandlerString += "  else if (args.model==\"" + module + "\")\n    delete ((" + module + "*)modelObject);\n"
     modelHandlerString += modelHandler5
     for module in environmentModules:
@@ -176,19 +174,19 @@ def recompile():
         modelHandlerString += "  else if (args.environment==\"" + module + "\")\n    delete ((" + module + "*)environmentObject);\n"
     modelHandlerString += modelHandler7
 
-    with open('src/modelHandler.cpp', 'w') as modelHandlerFile:
+    with open('src/model_handler.cpp', 'w') as modelHandlerFile:
         modelHandlerFile.write(modelHandlerString)
 
     # Rewrite model list files
-    with open('replicators/replicators', 'w') as repModuleFile:
+    with open('development_modules/development_module_list', 'w') as developmentFile:
         first = True
-        for module in reproductionModules:
+        for module in developmentModules:
             if first:
                 first = False
             else:
-                repModuleFile.write("\n")
-            repModuleFile.write(module)
-    with open('environments/environments', 'w') as envModuleFile:
+                developmentFile.write("\n")
+            developmentFile.write(module)
+    with open('environment_modules/environment_module_list', 'w') as envModuleFile:
         first = True
         for module in environmentModules:
             if first:
@@ -199,29 +197,29 @@ def recompile():
 
     # If the directory doesn't exist, create it.
     # If the .h and .cpp files don't exist, create them
-    for module in reproductionModules:
-        if not os.path.exists("replicators/" + module):
-            os.makedirs("replicators/" + module)
-        if not os.path.isfile("replicators/" + module + "/" + module + ".h"):
-            with open("replicators/" + module + "/" + module + ".h", 'w') as hFile:
+    for module in developmentModules:
+        if not os.path.exists("development_modules/" + module):
+            os.makedirs("development_modules/" + module)
+        if not os.path.isfile("development_modules/" + module + "/" + module + ".h"):
+            with open("development_modules/" + module + "/" + module + ".h", 'w') as hFile:
                 hFile.write("#include \"BaseReplicator.h\"\n\nclass ")
                 hFile.write(module + " : public BaseReplicator\n{\npublic:\n  ")
                 hFile.write(module + "(config &args);\n  ~" + module + "();\n};\n")
-            with open("replicators/" + module + "/" + module + ".cpp", 'w') as cppFile:
+            with open("development_modules/" + module + "/" + module + ".cpp", 'w') as cppFile:
                 cppFile.write("using namespace std;\n#include <iostream>\n#include \"" + module + ".h\"\n\n")
                 cppFile.write(module + "::" + module + "(config &args) : BaseReplicator(args)\n{\n}\n\n")
                 cppFile.write(module + "::~" + module + "()\n{\n}\n")
 
     for module in environmentModules:
-        if not os.path.exists("environments/" + module):
-            os.makedirs("environments/" + module)
-        if not os.path.isfile("environments/" + module + "/" + module + ".h"):
-            with open("environments/" + module + "/" + module + ".h", 'w') as hFile:
+        if not os.path.exists("environment_modules/" + module):
+            os.makedirs("environment_modules/" + module)
+        if not os.path.isfile("environment_modules/" + module + "/" + module + ".h"):
+            with open("environment_modules/" + module + "/" + module + ".h", 'w') as hFile:
                 pass
                 hFile.write("#include \"BaseEnvironment.h\"\n\nclass ")
                 hFile.write(module + " : public BaseEnvironment\n{\npublic:\n\n")
                 hFile.write("  void interpretBody(config&,int,int,int);\n  void updateFitnesses(config&);\n\n\n  " + module + "(config&);\n  ~" + module + "();\n\nprivate:\n\n};\n")
-            with open("environments/" + module + "/" + module + ".cpp", 'w') as cppFile:
+            with open("environment_modules/" + module + "/" + module + ".cpp", 'w') as cppFile:
                 cppFile.write("using namespace std;\n#include <iostream>\n\n")
                 cppFile.write("#include \"" + module + ".h\"\n\n// Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future\n")
                 cppFile.write("void " + module + "::interpretBody(config &args, int x, int y, int t)\n{\n}\n\n")
@@ -277,10 +275,10 @@ while 1:
         while not (ans == ord("y") or ans == ord("n")):
             ans = stdscr.getch()
         if ans == ord("y"):
-            if newRep in reproductionModules:
+            if newRep in developmentModules:
                 postClearString = "Reproduction module called \"" + newRep + "\" already exists\n\n"
             else:
-                reproductionModules.append(newRep)
+                developmentModules.append(newRep)
                 postClearString = "Added reproduction module \"" + newRep + "\"\n\n"
                 postClearString += recompile()
         state = main
