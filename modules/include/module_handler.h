@@ -3,7 +3,7 @@
 #include <string>
 #include "config.h"
 
-BaseReplicator* newModel(config&);
+BaseDevMechanism* newModel(config&);
 void deleteModel(config&, BaseDevMechanism*);
 BaseEnvironment* newEnvironment(config&);
 void deleteEnvironment(config&, BaseEnvironment*);
