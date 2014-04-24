@@ -17,10 +17,10 @@ struct config
   int          width;
   int          height;
   int          simulationTime;
-  string       model;
+  string       developmentMechanism;
   string       environment;
-  map <string, string> modelConfig;
-  map <string, string> environmentConfig;
+  map <string, string> devArgs;
+  map <string, string> envArgs;
 };
 
 void setConfigDir(config&);

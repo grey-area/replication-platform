@@ -51,40 +51,40 @@ makefileLine = """
 
 """
 
-modelHandler1 = """using namespace std;
+moduleHandler1 = """using namespace std;
 #include <iostream>
 #include "module_handler.h"
 
 // Development modules
 """
 
-modelHandler2 = """
+moduleHandler2 = """
 // Environment modules
 """
 
-modelHandler3 = """
-BaseDevMechanism* newModel(config &args)
+moduleHandler3 = """
+BaseDevMechanism* newOrganism(config &args)
 {
   BaseDevMechanism *m;
 
-  if (args.model=="BaseDevMechanism")
+  if (args.developmentMechanism=="BaseDevMechanism")
     m = new BaseDevMechanism(args);
 """
 
-modelHandler4 = """  else                         
+moduleHandler4 = """  else                         
     m = new BaseDevMechanism(args);
 
   return m;
 }
 
-void deleteModel(config &args, BaseDevMechanism* modelObject)
+void deleteOrganism(config &args, BaseDevMechanism* organismObject)
 {
-  if (args.model=="BaseDevMechanism")
-    delete modelObject;
+  if (args.developmentMechanism=="BaseDevMechanism")
+    delete organismObject;
 """
 
-modelHandler5 = """  else
-    delete modelObject;
+moduleHandler5 = """  else
+    delete organismObject;
 }
 
 BaseEnvironment* newEnvironment(config &args)
@@ -95,7 +95,7 @@ BaseEnvironment* newEnvironment(config &args)
     e = new BaseEnvironment(args);
 """
 
-modelHandler6 = """  else
+moduleHandler6 = """  else
     e = new BaseEnvironment(args);
 
   return e;
@@ -107,7 +107,7 @@ void deleteEnvironment(config &args, BaseEnvironment* environmentObject)
     delete environmentObject;
 """
 
-modelHandler7 = """  else
+moduleHandler7 = """  else
     delete environmentObject;
 }
 """
@@ -153,31 +153,31 @@ def recompile():
     with open('Makefile', 'w') as makefileFile:
         makefileFile.write(makefileString)
 
-    # Rewrite modelHandler
-    modelHandlerString = modelHandler1
+    # Rewrite moduleHandler
+    moduleHandlerString = moduleHandler1
     for module in developmentModules:
-        modelHandlerString += "#include \"" + module + ".h\"\n"
-    modelHandlerString += modelHandler2
+        moduleHandlerString += "#include \"" + module + ".h\"\n"
+    moduleHandlerString += moduleHandler2
     for module in environmentModules:
-        modelHandlerString += "#include \"" + module + ".h\"\n"
-    modelHandlerString += modelHandler3
+        moduleHandlerString += "#include \"" + module + ".h\"\n"
+    moduleHandlerString += moduleHandler3
     for module in developmentModules:
-        modelHandlerString += "  else if (args.model==\"" + module + "\")\n    m = new " + module + "(args);\n"
-    modelHandlerString += modelHandler4
+        moduleHandlerString += "  else if (args.developmentMechanism==\"" + module + "\")\n    m = new " + module + "(args);\n"
+    moduleHandlerString += moduleHandler4
     for module in developmentModules:
-        modelHandlerString += "  else if (args.model==\"" + module + "\")\n    delete ((" + module + "*)modelObject);\n"
-    modelHandlerString += modelHandler5
+        moduleHandlerString += "  else if (args.developmentMechanism==\"" + module + "\")\n    delete ((" + module + "*)organismObject);\n"
+    moduleHandlerString += moduleHandler5
     for module in environmentModules:
-        modelHandlerString += "  else if (args.environment==\"" + module + "\")\n    e = new " + module + "(args);\n"
-    modelHandlerString += modelHandler6
+        moduleHandlerString += "  else if (args.environment==\"" + module + "\")\n    e = new " + module + "(args);\n"
+    moduleHandlerString += moduleHandler6
     for module in environmentModules:
-        modelHandlerString += "  else if (args.environment==\"" + module + "\")\n    delete ((" + module + "*)environmentObject);\n"
-    modelHandlerString += modelHandler7
+        moduleHandlerString += "  else if (args.environment==\"" + module + "\")\n    delete ((" + module + "*)environmentObject);\n"
+    moduleHandlerString += moduleHandler7
 
-    with open('src/module_handler.cpp', 'w') as modelHandlerFile:
-        modelHandlerFile.write(modelHandlerString)
+    with open('src/module_handler.cpp', 'w') as moduleHandlerFile:
+        moduleHandlerFile.write(moduleHandlerString)
 
-    # Rewrite model list files
+    # Rewrite development mechanism list file
     with open('development_modules/development_module_list', 'w') as developmentFile:
         first = True
         for module in developmentModules:

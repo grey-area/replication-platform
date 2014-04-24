@@ -6,7 +6,7 @@ using namespace std;
 #include <algorithm>
 #include <set>
 
-string BaseDevMechanism::modelName;
+string BaseDevMechanism::devName;
 int BaseDevMechanism::alphabetSize;
 int BaseDevMechanism::initialDataSize;
 int BaseDevMechanism::minDataSize;
@@ -14,21 +14,21 @@ int BaseDevMechanism::maxDataSize;
 
 void BaseDevMechanism::setArgs(config &args)
 {
-  modelName = args.model;
-  if (args.modelConfig.count("alphabet"))
-    alphabetSize = atoi(args.modelConfig["alphabet"].c_str());
+  devName = args.developmentMechanism;
+  if (args.devArgs.count("alphabet"))
+    alphabetSize = atoi(args.devArgs["alphabet"].c_str());
   else
     alphabetSize = 31;
-  if (args.modelConfig.count("initial-data-size"))
-    initialDataSize = atoi(args.modelConfig["initial-data-size"].c_str());
+  if (args.devArgs.count("initial-data-size"))
+    initialDataSize = atoi(args.devArgs["initial-data-size"].c_str());
   else
     initialDataSize = 10;
-  if (args.modelConfig.count("min-data-size"))
-    minDataSize = atoi(args.modelConfig["min-data-size"].c_str());
+  if (args.devArgs.count("min-data-size"))
+    minDataSize = atoi(args.devArgs["min-data-size"].c_str());
   else
     minDataSize = 1;
-  if (args.modelConfig.count("max-data-size"))
-    maxDataSize = atoi(args.modelConfig["max-data-size"].c_str());
+  if (args.devArgs.count("max-data-size"))
+    maxDataSize = atoi(args.devArgs["max-data-size"].c_str());
   else
     maxDataSize = 100;
 }
@@ -52,9 +52,9 @@ BaseDevMechanism::~BaseDevMechanism()
 {
   // If I've alloc'd a child who hasn't been born, free it
   config args;
-  args.model = modelName;
+  args.developmentMechanism = devName;
   if (child and (child->state)==EMBRYO)
-    deleteModel(args, child);
+    deleteOrganism(args, child);
 }
 
 
@@ -163,7 +163,7 @@ void BaseDevMechanism::update(config &args)
     case START:
 
       // Create new child
-      child = newModel(args);
+      child = newOrganism(args);
       child->parentID = id;
       child->gestationTime = 0;
 

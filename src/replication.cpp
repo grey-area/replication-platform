@@ -32,8 +32,8 @@ void newEntities(config &args)
   for(int j=0;j<args.height; j++)
   {
     if (grid[0][j])
-      deleteModel(args, grid[0][j]);
-    grid[0][j] = newModel(args);
+      deleteOrganism(args, grid[0][j]);
+    grid[0][j] = newOrganism(args);
     grid[0][j]->state = START;
     grid[0][j]->newEntity(args);
   }
@@ -55,7 +55,7 @@ void placeChild(config &args, BaseDevMechanism *child, int i, int j, int &x, int
     // TODO what do I want to print?
     if (args.debug)
       cout << "\tDeleting " << grid[x][y]->id << " to make room" << endl;
-    deleteModel(args, grid[x][y]);
+    deleteOrganism(args, grid[x][y]);
   }
   grid[x][y] = child;
 }
@@ -64,7 +64,7 @@ void placeChild(config &args, BaseDevMechanism *child, int i, int j, int &x, int
 int init(int argc, char **argv, config &args)
 {
   // Parse command line arguments, put result in args struct (see arguments.h)
-  // args.model is the name of the developmental mechanism we'll use
+  // args.developmentMechanism is the name of the developmental mechanism we'll use
   if ( parseArguments(argc, argv, args) )
     return 1;
 
@@ -248,7 +248,7 @@ void cleanUp(config &args)
     {
       if (grid[i][j])
       {
-        deleteModel(args, grid[i][j]);
+        deleteOrganism(args, grid[i][j]);
       }
     }
   }

@@ -3,7 +3,7 @@ using namespace std;
 #include "DevL1.h"
 
 /*
-  Development model based on context-sensitive L-systems.
+  Development mechanism based on context-sensitive L-systems.
   Each organism has a set of production rules of the form A<B>C -> DEF. The production rules are applied to the genome until no more rules can be applied.
   When development is finished, the result is the specification of the offspring's production rules and `solution' (These parts are separated by the `AA' symbol sequence.
   The production rule specification is read as follows. The first three symbols make the LHS. All following symbols up to but not including a punctuation symbol sequence
@@ -33,7 +33,7 @@ void DevL1::newDecoder(config &args)
 {
   productionRules.clear();
 
-  if (not (args.modelConfig.count("type") and args.modelConfig["type"] == "ga"))
+  if (not (args.devArgs.count("type") and args.devArgs["type"] == "ga"))
   {
     unsigned int s = rand()%(initProductionRuleSize-10) + 10;
     for(int i=0; i<s; ++i)
@@ -54,7 +54,7 @@ void DevL1::initializeDecoding(config &args)
 
   // Copy child's data to my working data
   // If this flag is set, introduce non-heritable variation at the start of development
-  if (args.modelConfig.count("noisy-development"))
+  if (args.devArgs.count("noisy-development"))
     workingData.at(workingDataFrame) = child->copyData(args);
   else
     copy(child->data.begin(), child->data.end(), back_inserter(workingData.at(workingDataFrame)));
@@ -106,7 +106,7 @@ void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
 
   vector<unsigned short>::iterator decoderEnd = unpackedData.end();
   unsigned int punctuationSize = 0;
-  // If loopy model, split the result into a specification of production rules and specification of the body
+  // If loopy mechanism, split the result into a specification of production rules and specification of the body
   if (type == LOOPY)
   {
     // Look for a part punctuation mark
@@ -116,7 +116,7 @@ void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
     {
       vector<unsigned short>::iterator searchBegin;
       // If this flag is set, at least half of the unpacked data specifies a decoder, so we only look for the punctuation mark in the second half
-      if (args.modelConfig.count("half-decoder"))
+      if (args.devArgs.count("half-decoder"))
 	searchBegin = unpackedData.begin() + unpackedData.size()/2;
       else
 	searchBegin = unpackedData.begin();
@@ -125,7 +125,7 @@ void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
 	punctuationSize = p->size();
     }
   }
-  else // If unloopy model, the whole unpacked data specifies the body
+  else // If unloopy mechanism, the whole unpacked data specifies the body
     decoderEnd = unpackedData.begin();
 
   // Copy the stuff after the punctuation mark to the child's body specification
@@ -167,7 +167,7 @@ void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
 
 
   // Debugging
-  if(args.modelConfig.count("debug"))
+  if(args.devArgs.count("debug"))
   {
     cout << "Final working data:" << endl;
     for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
@@ -220,7 +220,7 @@ void DevL1::decode(config &args)
   DevL1 *c = (DevL1*)child;
 
   // Debugging
-  if(args.modelConfig.count("debug"))
+  if(args.devArgs.count("debug"))
   {
     cout << "I am " << id << " producing child " << c->id << endl;
     cout << "Data:" << endl;
@@ -274,7 +274,7 @@ void DevL1::decode(config &args)
       map<triple, vector<unsigned short> >::iterator productionRule = productionRules.end();
 
       // Treat a '3' on the left or right as a wildcard symbol
-      if (args.modelConfig.count("wildcard"))
+      if (args.devArgs.count("wildcard"))
       {
 	if (t.x == 3)
 	{
@@ -315,7 +315,7 @@ void DevL1::decode(config &args)
 	copy(productionRule->second.begin(), productionRule->second.end(), back_inserter(workingData.at(1-workingDataFrame)));	
 
 	// Debugging
-	if(args.modelConfig.count("debug"))
+	if(args.devArgs.count("debug"))
 	{
 	cout << "Replacing " << *it << " with ";
 	for(vector<unsigned short>::iterator it2=productionRule->second.begin(); it2!=productionRule->second.end(); ++it2)
@@ -329,7 +329,7 @@ void DevL1::decode(config &args)
   // Switch the frames
   workingDataFrame = 1-workingDataFrame;
 
-  if(args.modelConfig.count("debug"))
+  if(args.devArgs.count("debug"))
   {
     cout << "Working data after one pass:" << endl;
     for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
@@ -348,11 +348,11 @@ void DevL1::decode(config &args)
 DevL1::DevL1(config &args) : BaseDevMechanism(args)
 {
   type = LOOPY;
-  if ( args.modelConfig.count("type") )
+  if ( args.devArgs.count("type") )
   {
-    if (args.modelConfig["type"] == "ga")
+    if (args.devArgs["type"] == "ga")
       type = GA;
-    else if (args.modelConfig["type"] == "unloopy")
+    else if (args.devArgs["type"] == "unloopy")
       type = UNLOOPY;
   }
 

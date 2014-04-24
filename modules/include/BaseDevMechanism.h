@@ -16,7 +16,7 @@ class BaseDevMechanism
 
 public:
 
-  static std::string modelName;
+  static std::string devName;
   static int alphabetSize;
   static int initialDataSize;
   static int minDataSize;

@@ -16,18 +16,18 @@ using namespace std;
 void setConfigDir(config &args)
 {
   ostringstream dirStream;
-  dirStream << "model/" << args.model << "/";
+  dirStream << "dev/" << args.developmentMechanism << "/";
   
-  for (map<string, string>::iterator modelOpt = args.modelConfig.begin(); modelOpt != args.modelConfig.end(); ++modelOpt)
+  for (map<string, string>::iterator devOpt = args.devArgs.begin(); devOpt != args.devArgs.end(); ++devOpt)
   {
-    dirStream << "m-" << modelOpt->first << "/";
-    if (modelOpt->second!="") // not flag type option, has value
-      dirStream << modelOpt->second << "/";
+    dirStream << "m-" << devOpt->first << "/";
+    if (devOpt->second!="") // not flag type option, has value
+      dirStream << devOpt->second << "/";
   }
 
   dirStream << "env/" << args.environment << "/";
 
-  for (map<string, string>::iterator environOpt = args.environmentConfig.begin(); environOpt != args.environmentConfig.end(); ++environOpt)
+  for (map<string, string>::iterator environOpt = args.envArgs.begin(); environOpt != args.envArgs.end(); ++environOpt)
   {
     dirStream << "e-" << environOpt->first << "/";
     if (environOpt->second!="")
@@ -53,21 +53,21 @@ ostream& operator << (ostream& o, config a)
     o << "display" << endl;
   if (a.debug)
     o << "debug" << endl;
-  o << "model = " << a.model << endl;
+  o << "developmentMechanism = " << a.developmentMechanism << endl;
   o << "environment = " << a.environment << endl;
   o << "size = " << a.width << "x" << a.height << endl;
   o << "time = " << a.simulationTime << endl;
-  for (map<string, string>::iterator modelOpt = a.modelConfig.begin(); modelOpt != a.modelConfig.end(); ++modelOpt)
+  for (map<string, string>::iterator devOpt = a.devArgs.begin(); devOpt != a.devArgs.end(); ++devOpt)
   {
-    o << "model-" << modelOpt->first << " = ";
-    if (modelOpt->second=="") // flag type option
+    o << "dev-" << devOpt->first << " = ";
+    if (devOpt->second=="") // flag type option
       o << "true" << endl;
     else
-    o << modelOpt->second << endl;
+    o << devOpt->second << endl;
   }
-  for (map<string, string>::iterator environOpt = a.environmentConfig.begin(); environOpt != a.environmentConfig.end(); ++environOpt)
+  for (map<string, string>::iterator environOpt = a.envArgs.begin(); environOpt != a.envArgs.end(); ++environOpt)
   {
-    o << "environment-" << environOpt->first << " = ";
+    o << "env-" << environOpt->first << " = ";
     if (environOpt->second=="") // flag type option
       o << "true" << endl;
     else
@@ -77,7 +77,7 @@ ostream& operator << (ostream& o, config a)
 }
 
 
-// Given a vector of basic_options, take the unregistered ones whose string_keys begin with "model" or "environment", and put them in the modelConfig or environmentConfig
+// Given a vector of basic_options, take the unregistered ones whose string_keys begin with "dev" or "env", and put them in the devArgs or envArgs
 void sortUnregisteredOptions(config &args, vector<po::basic_option<char> > options)
 {
   for(vector<po::basic_option<char> >::iterator opt=options.begin(); opt!=options.end(); ++opt)
@@ -87,36 +87,36 @@ void sortUnregisteredOptions(config &args, vector<po::basic_option<char> > optio
 
       try
       {
-	// If the string key starts with "model"
-	if (boost::starts_with(opt->string_key, "model-"))
+	// If the string key starts with "dev"
+	if (boost::starts_with(opt->string_key, "dev-"))
 	{
 	  size_t delimPos = opt->string_key.find("-");
 	  string key = opt->string_key.substr(delimPos+1, string::npos); 
 
 	  // Only do anything if the option hasn't already been set. Has the effect that command line overrides config file, too.
-	  if (not args.modelConfig.count(key) )
+	  if (not args.devArgs.count(key) )
 	  {
 	    // If its a flag option, we'll know it's been set
-	    args.modelConfig[key] = "";
+	    args.devArgs[key] = "";
 	    // If it has a value, put it in the map
 	    if ( opt->value.size() > 0 )
-	      args.modelConfig[key] = (*opt).value[0];
+	      args.devArgs[key] = (*opt).value[0];
 	  }
 	}
 
-	// If the string key starts with "environment"
-	if (boost::starts_with(opt->string_key, "environment-"))
+	// If the string key starts with "env"
+	if (boost::starts_with(opt->string_key, "env-"))
 	{
 	  size_t delimPos = opt->string_key.find("-");
 	  string key = opt->string_key.substr(delimPos+1, string::npos); 
 
-	  if (not args.environmentConfig.count(key) )
+	  if (not args.envArgs.count(key) )
 	  {
 	    // If its a flag option, we'll know it's been set
-	    args.environmentConfig[key] = "";
+	    args.envArgs[key] = "";
 	    // If it has a value, put it in the map
 	    if ( opt->value.size() > 0 )
-	      args.environmentConfig[key] = (*opt).value[0];
+	      args.envArgs[key] = (*opt).value[0];
 	  }
 	}
       }
@@ -149,7 +149,7 @@ int parseArguments(int argc, char **argv, config &args)
   args.width   = 20;
   args.height  = 20;
   args.simulationTime = 100;
-  args.model       = "BaseDevMechanism";
+  args.developmentMechanism = "BaseDevMechanism";
   args.environment = "BaseEnvironment";
 
   // Options that can only be set from the command line
@@ -166,7 +166,7 @@ int parseArguments(int argc, char **argv, config &args)
     ("seed", po::value<int>(&(args.seed)), "set seed. -1 = time(NULL)")
     ("display", "show display")
     ("debug", "turn on debugging")
-    ("model", po::value<string>(&(args.model)), "specify the reproduction model to use")
+    ("developmentMechanism", po::value<string>(&(args.developmentMechanism)), "specify the development mechanism to use")
     ("environment", po::value<string>(&(args.environment)), "specify the environment to use")
     ("size", po::value<string>(), "set the size of the grid")
     ("time", po::value<int>(&(args.simulationTime)), "simulation time")
@@ -181,7 +181,7 @@ int parseArguments(int argc, char **argv, config &args)
     po::parsed_options parsed = po::command_line_parser(argc, argv).options(allOptions).allow_unregistered().run();
     po::store(parsed, vm);
     po::notify(vm);
-    // Sort unregistered command line options destined for the model/environment
+    // Sort unregistered command line options destined for the dev. mechanism/environment
     sortUnregisteredOptions(args, parsed.options);
 
     // Parse arguments from config file
@@ -191,7 +191,7 @@ int parseArguments(int argc, char **argv, config &args)
       po::parsed_options parsed = po::parse_config_file(configFileStream, commandLineAndConfig, true);
       po::store(parsed, vm);
       configFileStream.close();
-      // Sort unregistered config options destined for the model/environment
+      // Sort unregistered config options destined for the dev. mechanism/environment
       sortUnregisteredOptions(args, parsed.options);
     }
   }
@@ -228,13 +228,6 @@ int parseArguments(int argc, char **argv, config &args)
     args.width  = stoi( sizeString.substr(0, delimPos) );
     args.height = stoi( sizeString.substr(delimPos+1, string::npos) );
   }
-
-  /*cout << "Model options:" << endl;
-  for(map<string,string>::iterator it = args.modelConfig.begin(); it!=args.modelConfig.end(); ++it)
-    cout << it->first << ":" << it->second << endl;
-  cout << endl << "Environment options:" << endl;
-  for(map<string,string>::iterator it = args.environmentConfig.begin(); it!=args.environmentConfig.end(); ++it)
-  cout << it->first << ":" << it->second << endl;*/
 
   cout << args << endl;
 

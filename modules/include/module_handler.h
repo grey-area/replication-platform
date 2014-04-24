@@ -3,7 +3,7 @@
 #include <string>
 #include "config.h"
 
-BaseDevMechanism* newModel(config&);
-void deleteModel(config&, BaseDevMechanism*);
+BaseDevMechanism* newOrganism(config&);
+void deleteOrganism(config&, BaseDevMechanism*);
 BaseEnvironment* newEnvironment(config&);
 void deleteEnvironment(config&, BaseEnvironment*);

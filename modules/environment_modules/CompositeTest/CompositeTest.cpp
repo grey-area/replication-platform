@@ -12,16 +12,16 @@ void CompositeTest::interpretBody(config &args, int x, int y, int t)
   rep->fitness = 0.0;
 
   int cycle = 10000000;
-  if(args.environmentConfig.count("switching-rate"))
-    cycle = atoi(args.environmentConfig["switching-rate"].c_str());
+  if(args.envArgs.count("switching-rate"))
+    cycle = atoi(args.envArgs["switching-rate"].c_str());
 
   int toReward = ((t/cycle)%10) + 20;
 
   int type = 0;
   int digits = 1;
 
-  if(args.environmentConfig.count("type"))
-    type = atoi(args.environmentConfig["type"].c_str());
+  if(args.envArgs.count("type"))
+    type = atoi(args.envArgs["type"].c_str());
 
   int maxDigit = 5;
   switch (type)

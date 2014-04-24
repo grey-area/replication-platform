@@ -12,10 +12,10 @@ void EnvRepeatedCycle::interpretBody(config &args, int x, int y, int t)
   rep->score   = 0.0;
 
   int cycle = 1000000;
-  if(args.environmentConfig.count("switching-rate"))
-    cycle = atoi(args.environmentConfig["switching-rate"].c_str());
+  if(args.envArgs.count("switching-rate"))
+    cycle = atoi(args.envArgs["switching-rate"].c_str());
 
-  // Changed so that '3' is never rewarded, as '33' is used as a punctation mark in the DevL1 loopy model
+  // Changed so that '3' is never rewarded, as '33' is used as a punctation mark in the DevL1 development mechanism
   int toReward = ((t/cycle)%5)+4;
   //int toReward = 3;
   //int toReward = 20;
