@@ -76,6 +76,14 @@ void L1::buildProductionRules(config &args, vector<unsigned short>::iterator it,
 	punctuationSize = p->end() - p->begin();
       }
     }
+
+    // TODO changed so that rules can only be so long
+    if (ruleEnd - it > 10)
+    {
+      ruleEnd = it + 10;
+      punctuationSize = 0;
+    }
+
     vector<unsigned short> RHS;
     copy(it, ruleEnd, back_inserter(RHS));
     target[LHS] = RHS;

@@ -65,7 +65,7 @@ void BaseReplicator::printDecoder(ofstream &stream)
 // TODO needs to be more general. Return a string rather than printing to cout?
 void BaseReplicator::printData(ofstream &stream)
 {
-  stream << "ID: " << id << "  Parent ID: " << parentID << endl;
+  //stream << "ID: " << id << "  Parent ID: " << parentID << endl;
   stream << "Data:" << endl;
   for (vector<unsigned short>::iterator it = data.begin() ; it != data.end(); ++it)
     stream << *it << " ";
@@ -73,7 +73,7 @@ void BaseReplicator::printData(ofstream &stream)
   for (vector<unsigned short>::iterator it = bodySpecification.begin(); it != bodySpecification.end(); ++it)
     stream << *it << " ";
   stream << endl;
-  stream << "Gestation time: " << gestationTime << endl;
+  //stream << "Gestation time: " << gestationTime << endl;
   stream << "Print count: " << printCount << endl;
 }
 
