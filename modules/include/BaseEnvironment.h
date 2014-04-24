@@ -1,4 +1,4 @@
-#include "BaseReplicator.h"
+#include "BaseDevMechanism.h"
 #include "config.h"
 #include <vector>
 
@@ -10,7 +10,7 @@ class BaseEnvironment
 
 public:
 
-  std::vector <std::vector <BaseReplicator*> > *grid;
+  std::vector <std::vector <BaseDevMechanism*> > *grid;
 
   int functionEvaluations;
 

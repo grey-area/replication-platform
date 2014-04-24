@@ -22,5 +22,5 @@ results
 # These files are generated
 replication
 modules/Makefile
-modules/src/modelHandler.cpp
+modules/src/module_handler.cpp
 

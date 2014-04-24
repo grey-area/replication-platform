@@ -11,7 +11,7 @@
 #define REPRODUCED  2
 #define EMBRYO      9
 
-class BaseReplicator
+class BaseDevMechanism
 {
 
 public:
@@ -37,10 +37,10 @@ public:
   float fitness;
   float score;
 
-  BaseReplicator* child;
+  BaseDevMechanism* child;
 
-  BaseReplicator(config&);
-  virtual ~BaseReplicator();
+  BaseDevMechanism(config&);
+  virtual ~BaseDevMechanism();
 
   // For creating new random entity
   void newEntity(config&);

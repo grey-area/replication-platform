@@ -23,9 +23,9 @@ void BaseEnvironment::interpretBody(config &args, int x, int y, int t)
 // Maybe evaluate the fitnesses of every entity
 void BaseEnvironment::updateFitnesses(config &args)
 {
-/*for (vector<vector<BaseReplicator*> >::iterator i = grid->begin(); i != grid->end();++i) 
+/*for (vector<vector<BaseDevMechanism*> >::iterator i = grid->begin(); i != grid->end();++i) 
   {
-    for (vector<BaseReplicator*>::iterator j = i->begin(); j != i->end();++j)
+    for (vector<BaseDevMechanism*>::iterator j = i->begin(); j != i->end();++j)
     {
       // Need to dereference j twice
     }

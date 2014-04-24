@@ -8,7 +8,7 @@ void CompositeTest::interpretBody(config &args, int x, int y, int t)
 {
   functionEvaluations += 1;
 
-  BaseReplicator *rep = (*grid)[x][y];
+  BaseDevMechanism *rep = (*grid)[x][y];
   rep->fitness = 0.0;
 
   int cycle = 10000000;

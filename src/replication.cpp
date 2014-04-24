@@ -7,13 +7,13 @@ using namespace std;
 
 #include "config.h"
 #include "misc.h"
-#include "BaseReplicator.h"
+#include "BaseDevMechanism.h"
 #include "BaseEnvironment.h"
-#include "model_handler.h"
+#include "module_handler.h"
 
 #include <sys/stat.h>
 
-vector <vector <BaseReplicator* > > grid;
+vector <vector <BaseDevMechanism* > > grid;
 BaseEnvironment *environment;
 
 float window1Average = 0.0;
@@ -41,7 +41,7 @@ void newEntities(config &args)
 
 
 // Send the child's body specification to the task environment and place the child on the grid
-void placeChild(config &args, BaseReplicator *child, int i, int j, int &x, int &y)
+void placeChild(config &args, BaseDevMechanism *child, int i, int j, int &x, int &y)
 {
   // Put the child in a random cell neighbouring the parent
   x = mod((i+rand()%3-1), args.width);
@@ -64,7 +64,7 @@ void placeChild(config &args, BaseReplicator *child, int i, int j, int &x, int &
 int init(int argc, char **argv, config &args)
 {
   // Parse command line arguments, put result in args struct (see arguments.h)
-  // args.model is the name of the replication model we'll use
+  // args.model is the name of the developmental mechanism we'll use
   if ( parseArguments(argc, argv, args) )
     return 1;
 
@@ -78,9 +78,9 @@ int init(int argc, char **argv, config &args)
   // Wait to here to write config file, because we want to write the particular seed used
   writeConfigFile(args);
 
-  BaseReplicator::setArgs(args);
+  BaseDevMechanism::setArgs(args);
 
-  // Initialize a 2D grid of pointers to replicator objects
+  // Initialize a 2D grid of pointers to organism objects
   grid.resize(args.width);
   for(int i=0; i<args.width; i++)
   {
@@ -116,7 +116,7 @@ int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFil
   // TODO: wholeResult, decilesResult and quartilesResult don't count these updated fitnesses
   environment->updateFitnesses(args);
 
-  // Call update on each replicator periodically
+  // Call update on each organism periodically
   // TODO: change mechanism? (Instead of looping over all...?)
   for(int i=0; i<args.width; i++)
   {
@@ -145,19 +145,19 @@ int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFil
 	  je = j2;
 	}
 	
-	BaseReplicator *entity = grid[ie][je];
+	BaseDevMechanism *entity = grid[ie][je];
 	// TODO: what do I want to be printed when debugging?
 	//if (args.debug)
 	//  cout << "Updating " << ip << "," << j << endl;
 
-	// Update the entity. See BaseReplicator.cpp to see update cycle. Most time will be spent calling the decode function
-	// which is implemented by a subclass of BaseReplicator
+	// Update the entity. See BaseDevMechanism.cpp to see update cycle. Most time will be spent calling the decode function
+	// which is implemented by a subclass of BaseDevMechanism
 	entity->update(args);
 
 	// If the entity has a non-embryonic child (has reproduced)
 	if (entity->child and (entity->child)->state != EMBRYO)
 	{
-	  BaseReplicator *child = entity->child;
+	  BaseDevMechanism *child = entity->child;
 	  entity->child = NULL;
 
 	  // TODO how frequently do we print this stuff?

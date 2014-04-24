@@ -1,18 +1,18 @@
 using namespace std;
 #include <iostream>
-#include "Atomic.h"
+#include "DevAtomic.h"
 
 /*
-  Implemented a language based on Slash/A (based on Avida) to use as a development mechanism.
+  Implemented a language based on DevSlash/A (based on Avida) to use as a development mechanism.
   Didn't really work. Pick up again at some point?
  */
 
-void Atomic::printDecoder()
+void DevAtomic::printDecoder()
 {
 }
 
 // Create a new decoder, for an `orphan' cell
-void Atomic::newDecoder(config &args)
+void DevAtomic::newDecoder(config &args)
 {
   code.clear();
   for(int i=0; i<initialDataSize*5; ++i)
@@ -20,9 +20,9 @@ void Atomic::newDecoder(config &args)
 }
 
 // Done at the start of each reproduction cycle
-void Atomic::initializeDecoding(config &args)
+void DevAtomic::initializeDecoding(config &args)
 {
-  Atomic *c = ((Atomic*)child);
+  DevAtomic *c = ((DevAtomic*)child);
 
   // Copy child's data to my tape
   tape.clear();
@@ -37,7 +37,7 @@ void Atomic::initializeDecoding(config &args)
   loopTimes.clear();
 }
 
-void Atomic::execute(unsigned int ins)
+void DevAtomic::execute(unsigned int ins)
 {
   ip++;
 
@@ -144,9 +144,9 @@ void Atomic::execute(unsigned int ins)
 }
 
 // Iteratively run the thing
-void Atomic::decode(config &args)
+void DevAtomic::decode(config &args)
 {
-  Atomic *c = (Atomic*)child;
+  DevAtomic *c = (DevAtomic*)child;
 
   // Execute the instruction at the instruction pointer, increment the instruction pointer
   execute(*ip);
@@ -174,7 +174,7 @@ void Atomic::decode(config &args)
   }
 }
 
-Atomic::Atomic(config &args) : BaseReplicator(args)
+DevAtomic::DevAtomic(config &args) : BaseDevMechanism(args)
 {
   isetSize = 42;
   ip = code.begin();
@@ -184,6 +184,6 @@ Atomic::Atomic(config &args) : BaseReplicator(args)
   maxTapeSize = maxDataSize * 10;
 }
 
-Atomic::~Atomic()
+DevAtomic::~DevAtomic()
 {
 }

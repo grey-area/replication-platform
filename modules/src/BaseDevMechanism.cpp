@@ -1,18 +1,18 @@
 using namespace std;
 
 #include <iostream>
-#include "BaseReplicator.h"
-#include "model_handler.h"
+#include "BaseDevMechanism.h"
+#include "module_handler.h"
 #include <algorithm>
 #include <set>
 
-string BaseReplicator::modelName;
-int BaseReplicator::alphabetSize;
-int BaseReplicator::initialDataSize;
-int BaseReplicator::minDataSize;
-int BaseReplicator::maxDataSize;
+string BaseDevMechanism::modelName;
+int BaseDevMechanism::alphabetSize;
+int BaseDevMechanism::initialDataSize;
+int BaseDevMechanism::minDataSize;
+int BaseDevMechanism::maxDataSize;
 
-void BaseReplicator::setArgs(config &args)
+void BaseDevMechanism::setArgs(config &args)
 {
   modelName = args.model;
   if (args.modelConfig.count("alphabet"))
@@ -33,7 +33,7 @@ void BaseReplicator::setArgs(config &args)
     maxDataSize = 100;
 }
 
-BaseReplicator::BaseReplicator(config &args)
+BaseDevMechanism::BaseDevMechanism(config &args)
 {
   id = rand()%100000;
 
@@ -48,7 +48,7 @@ BaseReplicator::BaseReplicator(config &args)
   printCount = 0;
 }
 
-BaseReplicator::~BaseReplicator()
+BaseDevMechanism::~BaseDevMechanism()
 {
   // If I've alloc'd a child who hasn't been born, free it
   config args;
@@ -58,12 +58,12 @@ BaseReplicator::~BaseReplicator()
 }
 
 
-void BaseReplicator::printDecoder(ofstream &stream)
+void BaseDevMechanism::printDecoder(ofstream &stream)
 {
 }
 
 // TODO needs to be more general. Return a string rather than printing to cout?
-void BaseReplicator::printData(ofstream &stream)
+void BaseDevMechanism::printData(ofstream &stream)
 {
   //stream << "ID: " << id << "  Parent ID: " << parentID << endl;
   stream << "Data:" << endl;
@@ -77,7 +77,7 @@ void BaseReplicator::printData(ofstream &stream)
   stream << "Print count: " << printCount << endl;
 }
 
-void BaseReplicator::print(ofstream &stream)
+void BaseDevMechanism::print(ofstream &stream)
 {
   printDecoder(stream);
   printData(stream);
@@ -86,7 +86,7 @@ void BaseReplicator::print(ofstream &stream)
 
 
 // New random data for orphan
-void BaseReplicator::newData(config &args)
+void BaseDevMechanism::newData(config &args)
 {
   data.resize(initialDataSize);
   int i;
@@ -95,12 +95,12 @@ void BaseReplicator::newData(config &args)
 }
 
 // To override
-void BaseReplicator::newDecoder(config &args)
+void BaseDevMechanism::newDecoder(config &args)
 {
 }
 
 // New (orphan) entity
-void BaseReplicator::newEntity(config &args)
+void BaseDevMechanism::newEntity(config &args)
 {
   newData(args);
   newDecoder(args);
@@ -108,14 +108,14 @@ void BaseReplicator::newEntity(config &args)
 
 
 // To override. Called at the start of each decoding cycle.
-void BaseReplicator::initializeDecoding(config &args)
+void BaseDevMechanism::initializeDecoding(config &args)
 {
 }
 
 
 // Copy data from the parent to the child at the start of reproduction.
 // TODO: re-implement. Not sure this is the best scheme for adding noise
-vector<unsigned short> BaseReplicator::copyData(config &args)
+vector<unsigned short> BaseDevMechanism::copyData(config &args)
 {
   vector<unsigned short> dataCopy (data);
 
@@ -144,7 +144,7 @@ vector<unsigned short> BaseReplicator::copyData(config &args)
 
 
 // To override. Iteratively called during the decode cycle.
-void BaseReplicator::decode(config &args)
+void BaseDevMechanism::decode(config &args)
 {
   // The default behaviour is that the data and the `phenotype' are the same thing
   copy(child->data.begin(), child->data.end(), back_inserter(child->bodySpecification));
@@ -154,7 +154,7 @@ void BaseReplicator::decode(config &args)
 
 // Iteratively called by the controller. What we do here depends on our state, which is mostly controlled by this base class.
 // Roughly: 1) Create child and copy data to it. 2) The subclass decodes the child's data and interprets the result as a decoder and a body specification. It gives both to the child. 3) Give child same fitness level as us and both go to state start.
-void BaseReplicator::update(config &args)
+void BaseDevMechanism::update(config &args)
 {
   age++;
 

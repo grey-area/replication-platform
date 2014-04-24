@@ -1,19 +1,19 @@
-#include "BaseReplicator.h"
-#include "SlashA.hpp"
+#include "BaseDevMechanism.h"
+#include "DevSlashA.hpp"
 
-class Slash : public BaseReplicator
+class DevSlash : public BaseDevMechanism
 {
 public:
 
   // these should probably be static, but setting them might be awkward
   int alphabet;
-  SlashA::InstructionSet *iset_ptr;
+  DevSlashA::InstructionSet *iset_ptr;
   unsigned int dataTapeLength;
   unsigned int labelTapeLength;
   unsigned int maxSecondsRuntime;
 
-  SlashA::MemCore *memcore_ptr;
-  SlashA::ByteCode bc;
+  DevSlashA::MemCore *memcore_ptr;
+  DevSlashA::ByteCode bc;
   vector <double> inputBuffer;
   vector <double> outputBuffer;
 
@@ -22,6 +22,6 @@ public:
   void initializeDecoding(config&);
   void decode(config&);
 
-  Slash(config &args);
-  ~Slash();
+  DevSlash(config &args);
+  ~DevSlash();
 };

@@ -1,12 +1,12 @@
-#include "BaseReplicator.h"
+#include "BaseDevMechanism.h"
 #include <map>
 
-class Atomic : public BaseReplicator
+class DevAtomic : public BaseDevMechanism
 {
 public:
 
-  Atomic(config &args);
-  ~Atomic();
+  DevAtomic(config &args);
+  ~DevAtomic();
 
  private:
 

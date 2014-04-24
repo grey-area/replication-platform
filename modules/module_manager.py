@@ -22,12 +22,12 @@ makefile1 = """all: directories lib/modules.so
 directories:
 	mkdir -p build; mkdir -p lib
 
-lib/modules.so: build/model_handler.o """
+lib/modules.so: build/module_handler.o """
 
-makefile2 = """build/BaseReplicator.o build/BaseEnvironment.o
+makefile2 = """build/BaseDevMechanism.o build/BaseEnvironment.o
 	g++ -O3 -shared $^ -o $@
 
-build/model_handler.o: ./src/model_handler.cpp ./include/model_handler.h """
+build/module_handler.o: ./src/module_handler.cpp ./include/module_handler.h """
 
 makefile3 = """../include/config.h
 	g++ -O3 -std=c++11 -I/home/andrew/local/boost_1_55_0/installed/include -I./include/ -I../include/ """
@@ -36,7 +36,7 @@ makefile4 = """-fpic -c $< -o $@
 
 """
 
-makefile5 = """build/BaseReplicator.o: ./src/BaseReplicator.cpp ./include/BaseReplicator.h ../include/config.h
+makefile5 = """build/BaseDevMechanism.o: ./src/BaseDevMechanism.cpp ./include/BaseDevMechanism.h ../include/config.h
 	g++ -O3 -std=c++11 -I/home/andrew/local/boost_1_55_0/installed/include  -I./include/ -I../include/ -fpic -c $< -o $@
 
 build/BaseEnvironment.o: ./src/BaseEnvironment.cpp ./include/BaseEnvironment.h ../include/config.h
@@ -53,7 +53,7 @@ makefileLine = """
 
 modelHandler1 = """using namespace std;
 #include <iostream>
-#include "model_handler.h"
+#include "module_handler.h"
 
 // Development modules
 """
@@ -63,23 +63,23 @@ modelHandler2 = """
 """
 
 modelHandler3 = """
-BaseReplicator* newModel(config &args)
+BaseDevMechanism* newModel(config &args)
 {
-  BaseReplicator *m;
+  BaseDevMechanism *m;
 
-  if (args.model=="BaseReplicator")
-    m = new BaseReplicator(args);
+  if (args.model=="BaseDevMechanism")
+    m = new BaseDevMechanism(args);
 """
 
 modelHandler4 = """  else                         
-    m = new BaseReplicator(args);
+    m = new BaseDevMechanism(args);
 
   return m;
 }
 
-void deleteModel(config &args, BaseReplicator* modelObject)
+void deleteModel(config &args, BaseDevMechanism* modelObject)
 {
-  if (args.model=="BaseReplicator")
+  if (args.model=="BaseDevMechanism")
     delete modelObject;
 """
 
@@ -143,7 +143,7 @@ def recompile():
         makefileString += "-I./environment_modules/" + module + " "
     makefileString += makefile4
     for module in developmentModules:
-        makefileString += "build/" + module + ".o: ./development_modules/" + module + "/" + module + ".cpp ./development_modules/" + module + "/" + module + ".h ./include/BaseReplicator.h"
+        makefileString += "build/" + module + ".o: ./development_modules/" + module + "/" + module + ".cpp ./development_modules/" + module + "/" + module + ".h ./include/BaseDevMechanism.h"
         makefileString += makefileLine
     for module in environmentModules:
         makefileString += "build/" + module + ".o: ./environment_modules/" + module + "/" + module + ".cpp ./environment_modules/" + module + "/" + module + ".h ./include/BaseEnvironment.h"
@@ -174,7 +174,7 @@ def recompile():
         modelHandlerString += "  else if (args.environment==\"" + module + "\")\n    delete ((" + module + "*)environmentObject);\n"
     modelHandlerString += modelHandler7
 
-    with open('src/model_handler.cpp', 'w') as modelHandlerFile:
+    with open('src/module_handler.cpp', 'w') as modelHandlerFile:
         modelHandlerFile.write(modelHandlerString)
 
     # Rewrite model list files
@@ -202,12 +202,12 @@ def recompile():
             os.makedirs("development_modules/" + module)
         if not os.path.isfile("development_modules/" + module + "/" + module + ".h"):
             with open("development_modules/" + module + "/" + module + ".h", 'w') as hFile:
-                hFile.write("#include \"BaseReplicator.h\"\n\nclass ")
-                hFile.write(module + " : public BaseReplicator\n{\npublic:\n  ")
+                hFile.write("#include \"BaseDevMechanism.h\"\n\nclass ")
+                hFile.write(module + " : public BaseDevMechanism\n{\npublic:\n  ")
                 hFile.write(module + "(config &args);\n  ~" + module + "();\n};\n")
             with open("development_modules/" + module + "/" + module + ".cpp", 'w') as cppFile:
                 cppFile.write("using namespace std;\n#include <iostream>\n#include \"" + module + ".h\"\n\n")
-                cppFile.write(module + "::" + module + "(config &args) : BaseReplicator(args)\n{\n}\n\n")
+                cppFile.write(module + "::" + module + "(config &args) : BaseDevMechanism(args)\n{\n}\n\n")
                 cppFile.write(module + "::~" + module + "()\n{\n}\n")
 
     for module in environmentModules:

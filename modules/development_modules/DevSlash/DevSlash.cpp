@@ -1,19 +1,19 @@
 using namespace std;
 #include <iostream>
-#include "Slash.h"
+#include "DevSlash.h"
 
 /*
-  This was an attempt to use the Slash/A language as the development mechanism. Didn't really work.
+  This was an attempt to use the DevSlash/A language as the development mechanism. Didn't really work.
   Pick up again at some point?
 
  */
 
-void Slash::printDecoder()
+void DevSlash::printDecoder()
 {
 }
 
 // Create a new decoder, for an orphan cell
-void Slash::newDecoder(config &args)
+void DevSlash::newDecoder(config &args)
 {
   //cout << "1" << endl;
   // make a random bytecode vector
@@ -25,10 +25,10 @@ void Slash::newDecoder(config &args)
 }
 
 // Done at the start of each reproduction cycle
-void Slash::initializeDecoding(config &args)
+void DevSlash::initializeDecoding(config &args)
 {
   //cout << "4" << endl;
-  Slash *c = ((Slash*)child);
+  DevSlash *c = ((DevSlash*)child);
 
   //cout << "5" << endl;
   // Copy child's data to child's inputBuffer
@@ -45,24 +45,24 @@ void Slash::initializeDecoding(config &args)
     free (memcore_ptr);
     memcore_ptr = NULL;
   }
-  memcore_ptr = new SlashA::MemCore(dataTapeLength, labelTapeLength, c->inputBuffer, c->outputBuffer);
+  memcore_ptr = new DevSlashA::MemCore(dataTapeLength, labelTapeLength, c->inputBuffer, c->outputBuffer);
   //cout << "7" << endl;
 }
 
 // Apply the decoder (not iteratively, in this case)
-void Slash::decode(config &args)
+void DevSlash::decode(config &args)
 {
   //cout << "8" << endl;
-  Slash *c = ((Slash*)child);
+  DevSlash *c = ((DevSlash*)child);
 
   //cout << "9" << endl;
-  //for(vector<SlashA::ByteCode_Type>::iterator it=bc.begin(); it!=bc.end(); ++it)
+  //for(vector<DevSlashA::ByteCode_Type>::iterator it=bc.begin(); it!=bc.end(); ++it)
   //  cout << *it << ";";
   //cout << endl;
 
   try {
     if (bc.size() > 0)
-      bool failed = SlashA::runByteCode(*iset_ptr, *memcore_ptr, bc, args.seed, maxSecondsRuntime, -1);
+      bool failed = DevSlashA::runByteCode(*iset_ptr, *memcore_ptr, bc, args.seed, maxSecondsRuntime, -1);
     else
       c->newDecoder(args);
   }
@@ -102,7 +102,7 @@ void Slash::decode(config &args)
   /*cout << endl;
   cout << "I am " << id << ", with child " << c->id << endl;
   cout << "   bytecode: " << endl;
-  for (vector<SlashA::ByteCode_Type>::iterator it=bc.begin(); it!=bc.end(); ++it)
+  for (vector<DevSlashA::ByteCode_Type>::iterator it=bc.begin(); it!=bc.end(); ++it)
     cout << *it << ";";
   cout << endl;
   cout << "   data: " << endl;
@@ -122,7 +122,7 @@ void Slash::decode(config &args)
     cout << *it << ";";
   cout << endl;
   cout << "   child's bytecode: " << endl;
-  for (vector<SlashA::ByteCode_Type>::iterator it=c->bc.begin(); it!=c->bc.end(); ++it)
+  for (vector<DevSlashA::ByteCode_Type>::iterator it=c->bc.begin(); it!=c->bc.end(); ++it)
     cout << *it << ";";
   cout << endl;
   cout << "   child's body spec: " << endl;
@@ -137,27 +137,27 @@ void Slash::decode(config &args)
   state = REPRODUCED;
 }
 
-Slash::Slash(config &args) : BaseReplicator(args)
+DevSlash::DevSlash(config &args) : BaseDevMechanism(args)
 {
   alphabet = 29;
   dataTapeLength = maxDataSize * 20;
   labelTapeLength = maxDataSize;
   maxSecondsRuntime = 1;
 
-  //SlashA::InstructionSet iset(alphabet);
+  //DevSlashA::InstructionSet iset(alphabet);
   if (iset_ptr)
   {
     free (iset_ptr);
     iset_ptr = NULL;
   }
-  iset_ptr = new SlashA::InstructionSet(alphabet);
+  iset_ptr = new DevSlashA::InstructionSet(alphabet);
   alphabet += 28;
   iset_ptr->insert_DIS_full();
   //cout << iset_ptr->size() << endl;
   //iset_ptr = &iset;
 }
 
-Slash::~Slash()
+DevSlash::~DevSlash()
 {
 
   if (iset_ptr)

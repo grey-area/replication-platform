@@ -1,10 +1,10 @@
 using namespace std;
 #include <iostream>
 #include <algorithm>
-#include "Grammar1.h"
+#include "DevGrammar1.h"
 
 
-void Grammar1::printDecoder(ofstream &stream)
+void DevGrammar1::printDecoder(ofstream &stream)
 {
   int rule = 0;
   stream << "Rewrite rules:" << endl;
@@ -19,7 +19,7 @@ void Grammar1::printDecoder(ofstream &stream)
 
 
 // Create a new decoder, for an `orphan' cell
-void Grammar1::newDecoder(config &args)
+void DevGrammar1::newDecoder(config &args)
 {
   // Start with everything rewriting to nothing
   rules.resize(ruleAlphabet);
@@ -27,9 +27,9 @@ void Grammar1::newDecoder(config &args)
 
 
 // Done at the start of each reproduction cycle
-void Grammar1::initializeDecoding(config &args)
+void DevGrammar1::initializeDecoding(config &args)
 {
-  Grammar1 *c = ((Grammar1*)child);
+  DevGrammar1 *c = ((DevGrammar1*)child);
 
   // Copy child's data to decoded data
   copy(child->data.begin(), child->data.end(), back_inserter(c->decodedData));
@@ -43,7 +43,7 @@ void Grammar1::initializeDecoding(config &args)
 // Interpret that data as the specification of a list of rewrite rules.
 // Give that list of rewrite rules to the child. Give it the data after
 // the specification of the rule table as its `body specification'
-void Grammar1::interpret(config &args, Grammar1 *c)
+void DevGrammar1::interpret(config &args, DevGrammar1 *c)
 {
   // TODO what to print when debugging?
   if (args.debug)
@@ -110,9 +110,9 @@ void Grammar1::interpret(config &args, Grammar1 *c)
 
 
 // Iteratively apply the rewrite rules (decoder) to the data
-void Grammar1::decode(config &args)
+void DevGrammar1::decode(config &args)
 {
-  Grammar1 *c = (Grammar1*)child;
+  DevGrammar1 *c = (DevGrammar1*)child;
 
   bool changed = false;
 
@@ -165,7 +165,7 @@ void Grammar1::decode(config &args)
   // interpret decodedData as the specification of a list of rewrite rules.
   // The part of the data after the specification of the rewrite rules is the
   // `body specification'. Give the new rewrite rules and body spec to the child
-  // and go to state reproduced, passing control back to the BaseReplicator
+  // and go to state reproduced, passing control back to the BaseDevMechanism
   if (not changed and not prevChanged)
   {
     interpret(args, c);
@@ -174,11 +174,11 @@ void Grammar1::decode(config &args)
 }
 
 
-Grammar1::Grammar1(config &args) : BaseReplicator(args)
+DevGrammar1::DevGrammar1(config &args) : BaseDevMechanism(args)
 {
   ruleAlphabet = alphabetSize/3;
 }
 
-Grammar1::~Grammar1()
+DevGrammar1::~DevGrammar1()
 {
 }

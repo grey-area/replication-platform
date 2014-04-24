@@ -1,13 +1,13 @@
 using namespace std;
 #include <iostream>
 
-#include "TestEnvironment1.h"
+#include "EnvRepeatedCycle.h"
 
 
 // Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future, and maybe evaluate it now
-void TestEnvironment1::interpretBody(config &args, int x, int y, int t)
+void EnvRepeatedCycle::interpretBody(config &args, int x, int y, int t)
 {
-  BaseReplicator *rep = (*grid)[x][y];
+  BaseDevMechanism *rep = (*grid)[x][y];
   rep->fitness = 0.0;
   rep->score   = 0.0;
 
@@ -15,7 +15,7 @@ void TestEnvironment1::interpretBody(config &args, int x, int y, int t)
   if(args.environmentConfig.count("switching-rate"))
     cycle = atoi(args.environmentConfig["switching-rate"].c_str());
 
-  // Changed so that '3' is never rewarded, as '33' is used as a punctation mark in the L1 loopy model
+  // Changed so that '3' is never rewarded, as '33' is used as a punctation mark in the DevL1 loopy model
   int toReward = ((t/cycle)%5)+4;
   //int toReward = 3;
   //int toReward = 20;
@@ -44,12 +44,12 @@ void TestEnvironment1::interpretBody(config &args, int x, int y, int t)
 
 
 // Maybe evaluate the fitnesses of every entity
-void TestEnvironment1::updateFitnesses(config &args)
+void EnvRepeatedCycle::updateFitnesses(config &args)
 {
 
-/*for (vector<vector<BaseReplicator*> >::iterator i = grid->begin(); i != grid->end();++i) 
+/*for (vector<vector<BaseDevMechanism*> >::iterator i = grid->begin(); i != grid->end();++i) 
   {
-    for (vector<BaseReplicator*>::iterator j = i->begin(); j != i->end();++j)
+    for (vector<BaseDevMechanism*>::iterator j = i->begin(); j != i->end();++j)
     {
       // Need to dereference j twice
     }
@@ -58,10 +58,10 @@ void TestEnvironment1::updateFitnesses(config &args)
 }
 
 
-TestEnvironment1::TestEnvironment1(config &args) : BaseEnvironment(args)
+EnvRepeatedCycle::EnvRepeatedCycle(config &args) : BaseEnvironment(args)
 {
 }
 
-TestEnvironment1::~TestEnvironment1()
+EnvRepeatedCycle::~EnvRepeatedCycle()
 {
 }

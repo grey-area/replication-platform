@@ -1,4 +1,4 @@
-#include "BaseReplicator.h"
+#include "BaseDevMechanism.h"
 #include <map>
 
 class triple {
@@ -23,14 +23,14 @@ public:
 #define UNLOOPY   1
 #define GA        2
 
-class L1 : public BaseReplicator
+class DevL1 : public BaseDevMechanism
 {
 public:
 
   void printDecoder(ofstream &stream);
 
-  L1(config &args);
-  ~L1();
+  DevL1(config &args);
+  ~DevL1();
 
  private:
 

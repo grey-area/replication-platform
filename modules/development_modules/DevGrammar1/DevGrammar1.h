@@ -1,14 +1,14 @@
-#include "BaseReplicator.h"
+#include "BaseDevMechanism.h"
 #include <list>
 
-class Grammar1 : public BaseReplicator
+class DevGrammar1 : public BaseDevMechanism
 {
  public:
 
   void printDecoder(ofstream &stream);
 
-  Grammar1(config&);
-  ~Grammar1();
+  DevGrammar1(config&);
+  ~DevGrammar1();
 
  private:
 
@@ -17,7 +17,7 @@ class Grammar1 : public BaseReplicator
   list<unsigned short> decodedData;
   list<unsigned short>::iterator prevIt;
   bool prevChanged;
-  void interpret(config&, Grammar1*);
+  void interpret(config&, DevGrammar1*);
 
   void newDecoder(config&);
   void initializeDecoding(config&);

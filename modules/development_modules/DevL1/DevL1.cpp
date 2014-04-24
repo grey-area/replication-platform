@@ -1,6 +1,6 @@
 using namespace std;
 #include <iostream>
-#include "L1.h"
+#include "DevL1.h"
 
 /*
   Development model based on context-sensitive L-systems.
@@ -15,7 +15,7 @@ using namespace std;
 
  */
 
-void L1::printDecoder(ofstream &stream)
+void DevL1::printDecoder(ofstream &stream)
 {
     stream << endl << "Production rules:" << endl;
     for(map<triple, vector<unsigned short> >::iterator it = productionRules.begin(); it != productionRules.end(); ++it)
@@ -29,7 +29,7 @@ void L1::printDecoder(ofstream &stream)
 }
 
 // Create a new decoder, for an `orphan' cell
-void L1::newDecoder(config &args)
+void DevL1::newDecoder(config &args)
 {
   productionRules.clear();
 
@@ -45,9 +45,9 @@ void L1::newDecoder(config &args)
 
 
 // Done at the start of each reproduction cycle
-void L1::initializeDecoding(config &args)
+void DevL1::initializeDecoding(config &args)
 {
-  L1 *c = ((L1*)child);
+  DevL1 *c = ((DevL1*)child);
 
   workingData.at(0).clear();
   workingData.at(1).clear();
@@ -62,7 +62,7 @@ void L1::initializeDecoding(config &args)
 }
 
 
-void L1::buildProductionRules(config &args, vector<unsigned short>::iterator it, vector<unsigned short>::iterator decoderEnd, map<triple, vector<unsigned short> > &target)
+void DevL1::buildProductionRules(config &args, vector<unsigned short>::iterator it, vector<unsigned short>::iterator decoderEnd, map<triple, vector<unsigned short> > &target)
 {
   vector<unsigned short>::iterator decoderStart = it;
   // Build child's production rules from the stuff before the punctuation mark
@@ -100,9 +100,9 @@ void L1::buildProductionRules(config &args, vector<unsigned short>::iterator it,
 
 // 1. Split the unpacked data into two parts, one of which specifies the production rules of the next generation, and the other of which specifies whatever else the environment requires
 // 2. Build rules from the first part
-void L1::interpret(config &args, vector<unsigned short> unpackedData)
+void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
 {
-  L1 *c = (L1*)child; 
+  DevL1 *c = (DevL1*)child; 
 
   vector<unsigned short>::iterator decoderEnd = unpackedData.end();
   unsigned int punctuationSize = 0;
@@ -215,9 +215,9 @@ void L1::interpret(config &args, vector<unsigned short> unpackedData)
 
 
 // Iteratively apply the rewrite rules (decoder) to the data
-void L1::decode(config &args)
+void DevL1::decode(config &args)
 {
-  L1 *c = (L1*)child;
+  DevL1 *c = (DevL1*)child;
 
   // Debugging
   if(args.modelConfig.count("debug"))
@@ -345,7 +345,7 @@ void L1::decode(config &args)
 
 }
 
-L1::L1(config &args) : BaseReplicator(args)
+DevL1::DevL1(config &args) : BaseDevMechanism(args)
 {
   type = LOOPY;
   if ( args.modelConfig.count("type") )
@@ -377,6 +377,6 @@ L1::L1(config &args) : BaseReplicator(args)
   rulePunctuationMarks.push_back({3,2});
 }
 
-L1::~L1()
+DevL1::~DevL1()
 {
 }

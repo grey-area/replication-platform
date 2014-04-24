@@ -149,7 +149,7 @@ int parseArguments(int argc, char **argv, config &args)
   args.width   = 20;
   args.height  = 20;
   args.simulationTime = 100;
-  args.model       = "BaseReplicator";
+  args.model       = "BaseDevMechanism";
   args.environment = "BaseEnvironment";
 
   // Options that can only be set from the command line
