@@ -30,24 +30,24 @@ makefile2 = """build/BaseDevMechanism.o build/BaseEnvironment.o
 build/module_handler.o: ./src/module_handler.cpp ./include/module_handler.h """
 
 makefile3 = """../include/config.h
-	g++ -O3 -std=c++11 -I/home/andrew/local/boost_1_55_0/installed/include -I./include/ -I../include/ """
+	g++ -O3 -std=c++0x -I./include/ -I../include/ """
 
 makefile4 = """-fpic -c $< -o $@
 
 """
 
 makefile5 = """build/BaseDevMechanism.o: ./src/BaseDevMechanism.cpp ./include/BaseDevMechanism.h ../include/config.h
-	g++ -O3 -std=c++11 -I/home/andrew/local/boost_1_55_0/installed/include  -I./include/ -I../include/ -fpic -c $< -o $@
+	g++ -O3 -std=c++0x  -I./include/ -I../include/ -fpic -c $< -o $@
 
 build/BaseEnvironment.o: ./src/BaseEnvironment.cpp ./include/BaseEnvironment.h ../include/config.h
-	g++ -O3 -std=c++11 -I/home/andrew/local/boost_1_55_0/installed/include -I./include/ -I../include/ -fpic -c $< -o $@
+	g++ -O3 -std=c++0x -I./include/ -I../include/ -fpic -c $< -o $@
 
 clean:
 	rm -f *.o *.so *~ \#* ./build/*.o ./lib/*.so
 """
 
 makefileLine = """
-	g++ -O3 -std=c++11 -I/home/andrew/local/boost_1_55_0/installed/include -I./include/ -I../include/ -fpic -c $< -o $@
+	g++ -O3 -std=c++0x -I./include/ -I../include/ -fpic -c $< -o $@
 
 """
 
