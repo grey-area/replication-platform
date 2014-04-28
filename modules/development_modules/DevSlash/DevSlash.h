@@ -18,7 +18,7 @@ public:
   vector <double> outputBuffer;
 
   void printDecoder();
-  void newDecoder(config&);
+  void initializeOrphanDecoder(config&);
   void initializeDecoding(config&);
   void decode(config&);
 

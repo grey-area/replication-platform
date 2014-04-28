@@ -12,7 +12,7 @@ void DevAtomic::printDecoder()
 }
 
 // Create a new decoder, for an `orphan' cell
-void DevAtomic::newDecoder(config &args)
+void DevAtomic::initializeOrphanDecoder(config &args)
 {
   code.clear();
   for(int i=0; i<initialDataSize*5; ++i)

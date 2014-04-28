@@ -13,7 +13,7 @@ using namespace std;
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
 
-void setConfigDir(config &args)
+void setResultsDir(config &args)
 {
   ostringstream dirStream;
   dirStream << "dev/" << args.developmentMechanism << "/";
@@ -38,7 +38,7 @@ void setConfigDir(config &args)
 
   dirStream << "run/" << args.seed << "/";
 
-  args.resultsConfigDir = dirStream.str();
+  args.resultsDir = dirStream.str();
 }
 
 // Print the program options, in the same format as the config file
@@ -56,7 +56,7 @@ ostream& operator << (ostream& o, config a)
   o << "developmentMechanism = " << a.developmentMechanism << endl;
   o << "environment = " << a.environment << endl;
   o << "size = " << a.width << "x" << a.height << endl;
-  o << "time = " << a.simulationTime << endl;
+  o << "time = " << a.totalFunctionEvaluations << endl;
   for (map<string, string>::iterator devOpt = a.devArgs.begin(); devOpt != a.devArgs.end(); ++devOpt)
   {
     o << "dev-" << devOpt->first << " = ";
@@ -132,7 +132,7 @@ void sortUnregisteredOptions(config &args, vector<po::basic_option<char> > optio
 void writeConfigFile(config &args)
 {
   ofstream configFile;
-  configFile.open(args.resultsBaseDir + args.resultsConfigDir + "config.cfg");
+  configFile.open(args.resultsBaseDir + args.resultsDir + "config.cfg");
   configFile << args;
   configFile.close();
 }
@@ -142,13 +142,13 @@ int parseArguments(int argc, char **argv, config &args)
 {
   // Default options
   args.resultsBaseDir = "./results/default/";
-  args.resultsConfigDir = "default/";
+  args.resultsDir = "default/";
   args.seed    = -1;
   args.display = false;
   args.debug   = false;
   args.width   = 20;
   args.height  = 20;
-  args.simulationTime = 100;
+  args.totalFunctionEvaluations = 100;
   args.developmentMechanism = "BaseDevMechanism";
   args.environment = "BaseEnvironment";
 
@@ -169,7 +169,7 @@ int parseArguments(int argc, char **argv, config &args)
     ("developmentMechanism", po::value<string>(&(args.developmentMechanism)), "specify the development mechanism to use")
     ("environment", po::value<string>(&(args.environment)), "specify the environment to use")
     ("size", po::value<string>(), "set the size of the grid")
-    ("time", po::value<int>(&(args.simulationTime)), "simulation time")
+    ("time", po::value<int>(&(args.totalFunctionEvaluations)), "simulation time")
   ;
   po::options_description allOptions;
   allOptions.add(commandLineOnly).add(commandLineAndConfig);

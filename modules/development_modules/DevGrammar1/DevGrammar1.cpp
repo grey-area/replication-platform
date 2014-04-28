@@ -19,7 +19,7 @@ void DevGrammar1::printDecoder(ofstream &stream)
 
 
 // Create a new decoder, for an `orphan' cell
-void DevGrammar1::newDecoder(config &args)
+void DevGrammar1::initializeOrphanDecoder(config &args)
 {
   // Start with everything rewriting to nothing
   rules.resize(ruleAlphabet);
@@ -98,12 +98,6 @@ void DevGrammar1::interpret(config &args, DevGrammar1 *c)
   {
     if (*it > ruleAlphabet*2)
       c->bodySpecification.push_back(*it);
-  }
-
-  if (not (child->identical == 2))
-  {
-    if (rules == c->rules)
-      child->identical = 1;
   }
 
 }

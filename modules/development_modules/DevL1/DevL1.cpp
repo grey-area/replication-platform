@@ -29,7 +29,7 @@ void DevL1::printDecoder(ofstream &stream)
 }
 
 // Create a new decoder, for an `orphan' cell
-void DevL1::newDecoder(config &args)
+void DevL1::initializeOrphanDecoder(config &args)
 {
   productionRules.clear();
 
@@ -54,10 +54,9 @@ void DevL1::initializeDecoding(config &args)
 
   // Copy child's data to my working data
   // If this flag is set, introduce non-heritable variation at the start of development
+  workingData.at(workingDataFrame) = child->copyData(args);
   if (args.devArgs.count("noisy-development"))
-    workingData.at(workingDataFrame) = child->copyData(args);
-  else
-    copy(child->data.begin(), child->data.end(), back_inserter(workingData.at(workingDataFrame)));
+    mutateData(args, workingData.at(workingDataFrame));
 
 }
 
@@ -158,14 +157,6 @@ void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
   }
 
 
-  // If there hasn't been a mutation, check if the parent and child are identical
-  if (not (child->identical == 2))
-  {
-    if (productionRules.size() == c->productionRules.size() and equal(productionRules.begin(), productionRules.end(), c->productionRules.begin()) )
-      child->identical = 1;
-  }
-
-
   // Debugging
   if(args.devArgs.count("debug"))
   {
@@ -206,9 +197,6 @@ void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
       cout << endl;
     }
   } // End of debugging
-
-  // Check if the parent and child have identical production rules
-  //bool identical = false;
 
 }
 

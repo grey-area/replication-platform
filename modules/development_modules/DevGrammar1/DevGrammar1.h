@@ -19,7 +19,7 @@ class DevGrammar1 : public BaseDevMechanism
   bool prevChanged;
   void interpret(config&, DevGrammar1*);
 
-  void newDecoder(config&);
+  void initializeOrphanDecoder(config&);
   void initializeDecoding(config&);
   void decode(config&);
 

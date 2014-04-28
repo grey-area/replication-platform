@@ -6,6 +6,9 @@ using namespace std;
 #include <algorithm>
 #include <set>
 
+// ** = override
+// *  = optionally override
+
 string BaseDevMechanism::devName;
 int BaseDevMechanism::alphabetSize;
 int BaseDevMechanism::initialDataSize;
@@ -18,7 +21,7 @@ void BaseDevMechanism::setArgs(config &args)
   if (args.devArgs.count("alphabet"))
     alphabetSize = atoi(args.devArgs["alphabet"].c_str());
   else
-    alphabetSize = 31;
+    alphabetSize = 10;
   if (args.devArgs.count("initial-data-size"))
     initialDataSize = atoi(args.devArgs["initial-data-size"].c_str());
   else
@@ -35,12 +38,13 @@ void BaseDevMechanism::setArgs(config &args)
 
 BaseDevMechanism::BaseDevMechanism(config &args)
 {
-  id = rand()%100000;
+  id = rand()%1000000;
+  parentID = 0;
 
+  // The default state of a new organism
   state   = EMBRYO;
   age     = 0;
   gestationTime = 0;
-  identical = 0;
 
   fitness = 0.0;
   score   = 0.0;
@@ -50,7 +54,7 @@ BaseDevMechanism::BaseDevMechanism(config &args)
 
 BaseDevMechanism::~BaseDevMechanism()
 {
-  // If I've alloc'd a child who hasn't been born, free it
+  // If we've alloc'd a child who hasn't been born, free it
   config args;
   args.developmentMechanism = devName;
   if (child and (child->state)==EMBRYO)
@@ -58,11 +62,13 @@ BaseDevMechanism::~BaseDevMechanism()
 }
 
 
+// **
 void BaseDevMechanism::printDecoder(ofstream &stream)
 {
 }
 
-// TODO needs to be more general. Return a string rather than printing to cout?
+// *
+// CH
 void BaseDevMechanism::printData(ofstream &stream)
 {
   //stream << "ID: " << id << "  Parent ID: " << parentID << endl;
@@ -85,8 +91,9 @@ void BaseDevMechanism::print(ofstream &stream)
 }
 
 
-// New random data for orphan
-void BaseDevMechanism::newData(config &args)
+// *
+// New random data for orphan organism.
+void BaseDevMechanism::initializeOrphanData(config &args)
 {
   data.resize(initialDataSize);
   int i;
@@ -94,56 +101,52 @@ void BaseDevMechanism::newData(config &args)
     data[i] = rand()%alphabetSize;
 }
 
-// To override
-void BaseDevMechanism::newDecoder(config &args)
+// **
+void BaseDevMechanism::initializeOrphanDecoder(config &args)
 {
 }
 
-// New (orphan) entity
-void BaseDevMechanism::newEntity(config &args)
+// Initialize orphan organism
+void BaseDevMechanism::initializeOrphan(config &args)
 {
-  newData(args);
-  newDecoder(args);
+  state = START;
+  initializeOrphanData(args);
+  initializeOrphanDecoder(args);
 }
 
 
-// To override. Called at the start of each decoding cycle.
+// **
+// Called at the start of each decoding cycle.
 void BaseDevMechanism::initializeDecoding(config &args)
 {
 }
 
-
-// Copy data from the parent to the child at the start of reproduction.
-// TODO: re-implement. Not sure this is the best scheme for adding noise
+// Return a copy of the data. Used for copying data to child.
 vector<unsigned short> BaseDevMechanism::copyData(config &args)
 {
   vector<unsigned short> dataCopy (data);
 
-  // TODO decision. How to mutate. Min max size
-  // Insert with probability 0.5
-  if (rand()%2==0 and data.size() < maxDataSize)
-  {
-    dataCopy.insert(dataCopy.begin()+rand()%(dataCopy.size()), rand()%alphabetSize);
-    child->identical = 2;
-  }
-  // Delete with probability 0.5
-  if (rand()%2==0 and data.size() > minDataSize)
-  {
-    dataCopy.erase(dataCopy.begin()+rand()%(dataCopy.size()));
-    child->identical = 2;
-  }
-  // Change with probability 0.5
-  if (rand()%2==0)
-  {
-    dataCopy.at(rand()%(dataCopy.size())) = rand()%alphabetSize;
-    child->identical = 2;
-  }
-
   return dataCopy;
 }
 
+// *
+// Mutate the data of the organism in place
+void BaseDevMechanism::mutateData(config &args, vector<unsigned short> &data1)
+{
+  // Insert with probability 0.5
+  if (rand()%2==0 and data1.size() < maxDataSize)
+    data1.insert(data1.begin()+rand()%(data1.size()), rand()%alphabetSize);
+  // Delete with probability 0.5
+  if (rand()%2==0 and data1.size() > minDataSize)
+    data1.erase(data1.begin()+rand()%(data1.size()));
+  // Change with probability 0.5
+  if (rand()%2==0)
+    data1.at(rand()%(data1.size())) = rand()%alphabetSize;  
+}
 
-// To override. Iteratively called during the decode cycle.
+
+// **
+// Iteratively called during the decode cycle.
 void BaseDevMechanism::decode(config &args)
 {
   // The default behaviour is that the data and the `phenotype' are the same thing
@@ -165,10 +168,11 @@ void BaseDevMechanism::update(config &args)
       // Create new child
       child = newOrganism(args);
       child->parentID = id;
-      child->gestationTime = 0;
+      gestationTime = 0;
 
       // Copy data to child
       child->data = copyData(args);
+      mutateData(args, child->data);
 
       state = DECODING;
       initializeDecoding(args);
@@ -192,7 +196,7 @@ void BaseDevMechanism::update(config &args)
 
       state          = START; // Finished reproduction cycle
 
-      if (printCount > 0)
+      if (printCount > 0) // CH
       {
 	child->printCount = printCount-1;
 	printCount = 0;

@@ -27,44 +27,46 @@ public:
   int state;
   unsigned int age;
   unsigned int gestationTime;
-  unsigned int identical; // 0 = not identical to parent, 1 = is identical, 2 = there was a mutation, so we're not going to check
-  unsigned int printCount;
+  unsigned int printCount; // CH
   int parentID;
 
-  std::vector<unsigned short> data;
-  std::vector<unsigned short> bodySpecification;
-
+  // `fitness' is used to determine the metabolism of the organism.
+  // Use `score' to track performance in a way that doesn't affect metabolism.
   float fitness;
   float score;
 
+  // The genome of the organism
+  std::vector<unsigned short> data;
+  // The body specification of the organism
+  std::vector<unsigned short> bodySpecification;
+
+  // The organism's child
   BaseDevMechanism* child;
+
+  virtual std::vector<unsigned short> copyData(config&);
+  virtual void mutateData(config&, vector<unsigned short>&); // *
+  // For creating new random organism
+  void initializeOrphan(config&);
+  // For printing the state of the organism
+  void print(ofstream&);
+  void update(config&);
 
   BaseDevMechanism(config&);
   virtual ~BaseDevMechanism();
 
-  // For creating new random entity
-  void newEntity(config&);
-
-  // For printing decoder and data
-  void print(ofstream&);
-
-  virtual std::vector<unsigned short> copyData(config&); // *
-  void update(config&);
-
  private:
 
-  // Called by newEntity
-  virtual void newData(config&);    // *
-  virtual void newDecoder(config&); // **
+  // ** = override.
+  // * = optionally override.
 
-  // Called by print
-  virtual void printDecoder(ofstream&);  // **
+  virtual void initializeOrphanData(config&);    // *
+  virtual void initializeOrphanDecoder(config&); // **
+
   virtual void printData(ofstream&);     // *
+  virtual void printDecoder(ofstream&);  // **
 
   virtual void initializeDecoding(config&);              // **
   virtual void decode(config&);     // **
-
-  // ** = override. * = optionally override.
 
 };
 

@@ -26,7 +26,7 @@ public:
   void execute(unsigned int);
 
   void printDecoder();
-  void newDecoder(config&);
+  void initializeOrphanDecoder(config&);
   void initializeDecoding(config&);
   void decode(config&);
 

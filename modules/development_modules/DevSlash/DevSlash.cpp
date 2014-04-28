@@ -13,7 +13,7 @@ void DevSlash::printDecoder()
 }
 
 // Create a new decoder, for an orphan cell
-void DevSlash::newDecoder(config &args)
+void DevSlash::initializeOrphanDecoder(config &args)
 {
   //cout << "1" << endl;
   // make a random bytecode vector
@@ -64,11 +64,11 @@ void DevSlash::decode(config &args)
     if (bc.size() > 0)
       bool failed = DevSlashA::runByteCode(*iset_ptr, *memcore_ptr, bc, args.seed, maxSecondsRuntime, -1);
     else
-      c->newDecoder(args);
+      c->initializeOrphanDecoder(args);
   }
   catch(...)
   {
-    c->newDecoder(args);
+    c->initializeOrphanDecoder(args);
   }
 
   //cout << "10" << endl;

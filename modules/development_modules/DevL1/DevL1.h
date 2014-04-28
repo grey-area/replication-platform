@@ -49,7 +49,7 @@ public:
 
   bool changedOnLastPass;
 
-  void newDecoder(config&);
+  void initializeOrphanDecoder(config&);
   void initializeDecoding(config&);
 
   void buildProductionRules(config&, vector<unsigned short>::iterator, vector<unsigned short>::iterator, map<triple, vector<unsigned short> >&);
