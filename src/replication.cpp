@@ -4,6 +4,17 @@
 #include <fstream>
 #include <sys/stat.h>
 
+/**
+   \mainpage Testing
+   Blah
+
+   \section intro_sec Introduction
+   Blah
+
+   \section install_sec Installation
+   Blah
+ */
+
 using namespace std;
 
 #include "config.h"

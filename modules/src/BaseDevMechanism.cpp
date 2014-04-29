@@ -81,6 +81,11 @@ void BaseDevMechanism::printBodySpecification(ofstream &stream)
 }
 
 // **
+/*! \brief Brief description.
+ *         Brief description continued.
+ *
+ *  Detailed description starts here.
+ */
 void BaseDevMechanism::printDecoder(ofstream &stream)
 {
 }
@@ -109,6 +114,11 @@ void BaseDevMechanism::initializeOrphanData(config &args)
 }
 
 // **
+/*! \brief Brief description.
+ *         Brief description continued.
+ *
+ *  Detailed description starts here.
+ */
 void BaseDevMechanism::initializeOrphanDecoder(config &args)
 {
 }
@@ -124,11 +134,21 @@ void BaseDevMechanism::initializeOrphan(config &args)
 
 // **
 // Called at the start of each decoding cycle.
+/*! \brief Brief description.
+ *         Brief description continued.
+ *
+ *  Detailed description starts here.
+ */
 void BaseDevMechanism::initializeDecoding(config &args)
 {
 }
 
 // Return a copy of the data. Used for copying data to child.
+/*! \brief Brief description.
+ *         Brief description continued.
+ *
+ *  Detailed description starts here.
+ */
 vector<unsigned short> BaseDevMechanism::copyData(config &args)
 {
   vector<unsigned short> dataCopy (data);
@@ -138,6 +158,11 @@ vector<unsigned short> BaseDevMechanism::copyData(config &args)
 
 // *
 // Mutate the data of the organism in place
+/*! \brief Brief description.
+ *         Brief description continued.
+ *
+ *  Detailed description starts here.
+ */
 void BaseDevMechanism::mutateData(config &args, vector<unsigned short> &data1)
 {
   // Insert with probability 0.5
@@ -154,6 +179,11 @@ void BaseDevMechanism::mutateData(config &args, vector<unsigned short> &data1)
 
 // **
 // Iteratively called during the decode cycle.
+/*! \brief Brief description.
+ *         Brief description continued.
+ *
+ *  Detailed description starts here.
+ */
 void BaseDevMechanism::decode(config &args)
 {
   // The default behaviour is that the data and the `phenotype' are the same thing
@@ -162,8 +192,6 @@ void BaseDevMechanism::decode(config &args)
 }
 
 
-// Iteratively called by the controller. What we do here depends on our state, which is mostly controlled by this base class.
-// Roughly: 1) Create child and copy data to it. 2) The subclass decodes the child's data and interprets the result as a decoder and a body specification. It gives both to the child. 3) Give child same fitness level as us and both go to state start.
 void BaseDevMechanism::update(config &args)
 {
   age++;
