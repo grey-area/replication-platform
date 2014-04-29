@@ -13,7 +13,7 @@ BaseEnvironment::~BaseEnvironment()
 
 
 // Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future, and maybe evaluate it now
-void BaseEnvironment::interpretBody(config &args, int x, int y, int t)
+void BaseEnvironment::interpretBody(config &args, int x, int y)
 {
   (*grid)[x][y]->fitness = 0.0;
   (*grid)[x][y]->score   = 0.0;

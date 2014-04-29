@@ -5,7 +5,7 @@ using namespace std;
 
 
 // Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future, and maybe evaluate it now
-void EnvRepeatedCycle::interpretBody(config &args, int x, int y, int t)
+void EnvRepeatedCycle::interpretBody(config &args, int x, int y)
 {
   BaseDevMechanism *rep = (*grid)[x][y];
   rep->fitness = 0.0;
@@ -16,7 +16,7 @@ void EnvRepeatedCycle::interpretBody(config &args, int x, int y, int t)
     cycle = atoi(args.envArgs["switching-rate"].c_str());
 
   // Changed so that '3' is never rewarded, as '33' is used as a punctation mark in the DevL1 development mechanism
-  int toReward = ((t/cycle)%5)+4;
+  int toReward = ((functionEvaluations/cycle)%5)+4;
   //int toReward = 3;
   //int toReward = 20;
 

@@ -14,7 +14,7 @@ public:
 
   int functionEvaluations;
 
-  virtual void interpretBody(config&,int,int,int);
+  virtual void interpretBody(config&,int,int);
   virtual void updateFitnesses(config&);
 
   BaseEnvironment(config&);

@@ -35,6 +35,7 @@ void setResultsDir(config &args)
   }
 
   dirStream << "size/" << args.width << "x" << args.height << "/";
+  dirStream << "spawnRate/" << args.spawnRate << "/";
 
   dirStream << "run/" << args.seed << "/";
 
@@ -57,6 +58,8 @@ ostream& operator << (ostream& o, config a)
   o << "environment = " << a.environment << endl;
   o << "size = " << a.width << "x" << a.height << endl;
   o << "time = " << a.totalFunctionEvaluations << endl;
+  o << "spawnRate = " << a.spawnRate << endl;
+  o << "averagingWindowLength = " << a.averagingWindowLength << endl;
   for (map<string, string>::iterator devOpt = a.devArgs.begin(); devOpt != a.devArgs.end(); ++devOpt)
   {
     o << "dev-" << devOpt->first << " = ";
@@ -148,6 +151,8 @@ int parseArguments(int argc, char **argv, config &args)
   args.debug   = false;
   args.width   = 20;
   args.height  = 20;
+  args.spawnRate = 10;
+  args.averagingWindowLength = 100000;
   args.totalFunctionEvaluations = 100;
   args.developmentMechanism = "BaseDevMechanism";
   args.environment = "BaseEnvironment";
@@ -169,6 +174,8 @@ int parseArguments(int argc, char **argv, config &args)
     ("developmentMechanism", po::value<string>(&(args.developmentMechanism)), "specify the development mechanism to use")
     ("environment", po::value<string>(&(args.environment)), "specify the environment to use")
     ("size", po::value<string>(), "set the size of the grid")
+    ("spawnRate", po::value<int>(&(args.spawnRate)), "set the rate at which new (orphan) organisms are introduced. Introduce one row of new organisms every spawnRate*populationSize function evaluations.")
+    ("averagingWindowLength", po::value<int>(&(args.averagingWindowLength)), "set the window length for the window averaged results")
     ("time", po::value<int>(&(args.totalFunctionEvaluations)), "simulation time")
   ;
   po::options_description allOptions;

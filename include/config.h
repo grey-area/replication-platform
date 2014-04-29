@@ -16,6 +16,8 @@ struct config
   bool         debug;
   int          width;
   int          height;
+  int          spawnRate;
+  int          averagingWindowLength;
   int          totalFunctionEvaluations;
   string       developmentMechanism;
   string       environment;

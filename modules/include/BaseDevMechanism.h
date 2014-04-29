@@ -27,7 +27,7 @@ public:
   int state;
   unsigned int age;
   unsigned int gestationTime;
-  unsigned int printCount; // CH
+  unsigned int printCount; 
   int parentID;
 
   // `fitness' is used to determine the metabolism of the organism.
@@ -62,6 +62,7 @@ public:
   virtual void initializeOrphanData(config&);    // *
   virtual void initializeOrphanDecoder(config&); // **
 
+  virtual void printBodySpecification(ofstream&);     // *
   virtual void printData(ofstream&);     // *
   virtual void printDecoder(ofstream&);  // **
 

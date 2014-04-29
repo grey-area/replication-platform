@@ -17,12 +17,9 @@ vector <vector <BaseDevMechanism* > > grid;
 // The environment, which implements the fitness function(s)
 BaseEnvironment *environment;
 
-float window1Average = 0.0; // CH
-float window2Average = 0.0;
-float wholeResult = 0.0;
-float decilesResult [10] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-float quartilesResult [4] = {0.0,0.0,0.0,0.0};
-int window1GestationTime = 0; // CH
+float populationFitnessAverage = 0.0;
+int populationGestationTimeAverage = 0;
+float longWindowFitnessAverage = 0.0;
 
 // Put some random, new (orphan) organisms on the grid. Periodically called. (How frequently? parameter?)
 void newOrganisms(config &args)
@@ -44,19 +41,10 @@ void placeChild(config &args, BaseDevMechanism *child, int i, int j, int &x, int
   x = mod((i+rand()%3-1), args.width);
   y = mod((j +rand()%3-1), args.height);
 
-  // CH
-  if (args.debug)
-    cout << "\tPlacing child " << child->id << " at (" << x << "," << y << ")" << endl;
-
   // If the cell is already occupied, delete the entity there
   if (grid[x][y])
-  {
-    // CH
-    if (args.debug)
-      cout << "\tDeleting " << grid[x][y]->id << " to make room" << endl;
-
     deleteOrganism(args, grid[x][y]);
-  }
+
   grid[x][y] = child;
 }
 
@@ -100,22 +88,15 @@ int initialize(int argc, char **argv, config &args)
 }
 
 
-
-// CH lastT, dataFile1, dataFile2, reproducerFile
 // Main loop
-int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFile2, ofstream &reproducerFile)
+int loop(config &args, ofstream &dataFile1, ofstream &dataFile2, ofstream &reproducerFile)
 {
   int headCount = 0;
   float totalScore = 0.0;
   float maxScore = 0.0;
   int totalGestationTime = 0;
 
-  // Every so often, add new (orphan) entities to one line of the grid
-  if (t%100==99)
-    newOrganisms(args);
-
   // If fitnesses are periodically updated, update them
-  // TODO: wholeResult, decilesResult and quartilesResult don't count these updated fitnesses
   environment->updateFitnesses(args);
 
   // Call update on each organism periodically
@@ -148,33 +129,22 @@ int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFil
 	}
 	
 	BaseDevMechanism *entity = grid[ie][je];
-	// TODO: what do I want to be printed when debugging?
-	//if (args.debug)
-	//  cout << "Updating " << ip << "," << j << endl;
 
-	// Update the entity. See BaseDevMechanism.cpp to see update cycle. Most time will be spent calling the decode function
+	// Update the entity. See BaseDevMechanism.cpp for update cycle. Most time will be spent calling the decode function
 	// which is implemented by a subclass of BaseDevMechanism
 	entity->update(args);
 
-	// If the entity has a non-embryonic child (has reproduced)
+	// If the entity has a non-embryonic child (has just reproduced)
 	if (entity->child and (entity->child)->state != EMBRYO)
 	{
 	  BaseDevMechanism *child = entity->child;
 	  entity->child = NULL;
 
-	  // TODO how frequently do we print this stuff?
-	  if (t % 50 == 0 and i<3 and j<3)
-	  {
-	    //cout << "---------------------------------" << endl;
-	    //entity->print();
-	    //cout << endl << "Created" << endl << endl;
-	    //child->print();
-	  }
-
-	  // Send the child's body specification to the task environment, and place the child on the grid
 	  int x,y;
+	  // Place the child in the neighbourhood of the parent.
 	  placeChild(args, child, ie, je, x, y);
-	  environment->interpretBody(args, x, y, t);
+	  // Send the child's body specification to the task environment, setting its fitness.
+	  environment->interpretBody(args, x, y);
 
 	  if (child->printCount>0)
 	  {
@@ -182,26 +152,36 @@ int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFil
 	    child->print(reproducerFile);
 	  }
 
-	  window1Average += child->fitness;
-	  window1GestationTime += child->gestationTime;
-	  window2Average += child->fitness;
+	  populationFitnessAverage += child->fitness;
+	  populationGestationTimeAverage += child->gestationTime;
+	  longWindowFitnessAverage += child->fitness;
 
-	  // CH
+
+
+	  // # function evaluations is only ever updated inside this block. Do all time-related things here.
+	  // Output population average fitness and average gestation time
 	  if ((environment->functionEvaluations) % (args.width*args.height) == 0)
 	  {
-	    dataFile1 << environment->functionEvaluations << "\t" << window1Average/(args.width*args.height) << "\t" << window1GestationTime/(float)(args.width*args.height) << endl;
-	    window1Average = 0.0;
-	    window1GestationTime = 0;
+	    dataFile1 << environment->functionEvaluations << "\t" << populationFitnessAverage/(args.width*args.height) << "\t" << populationGestationTimeAverage/(float)(args.width*args.height) << endl;
+	    populationFitnessAverage = 0.0;
+	    populationGestationTimeAverage = 0;
 	  }
-	  if ((environment->functionEvaluations) % 100000 == 0)
+	  // Output long window average fitness
+	  if ((environment->functionEvaluations) % args.averagingWindowLength == 0)
 	  {
-	    dataFile2 << environment->functionEvaluations - 50000 << "\t" << window2Average/100000.0 << endl;
-	    window2Average = 0.0;
+	    dataFile2 << environment->functionEvaluations - args.averagingWindowLength/2 << "\t" << longWindowFitnessAverage/(float)args.averagingWindowLength << endl;
+	    longWindowFitnessAverage = 0.0;
+	  }
+	  if ((environment->functionEvaluations) % 20000 == 0)
+	  {
+	    if (grid[0][0])
+	      grid[0][0]->printCount=10;
 	  }
 
-	  wholeResult += child->fitness;
-	  decilesResult[(environment->functionEvaluations * 10) / args.totalFunctionEvaluations] += child->fitness;
-	  quartilesResult[(environment->functionEvaluations * 4) / args.totalFunctionEvaluations] +=  child->fitness;
+	  // Every so often, add new (orphan) entities to one line of the grid
+	  if (environment->functionEvaluations%(args.spawnRate*args.width*args.height)==args.spawnRate*args.width*args.height-1)
+	    newOrganisms(args);
+
 
 
 	}
@@ -210,25 +190,6 @@ int loop(config &args, int t, int &lastT, ofstream &dataFile1, ofstream &dataFil
     } // end of cell update
   } // end of row update
 
-  // TODO what do we want to print/output?
-  // TODO replaced with temp above
-  /*  if(t-lastT1 > 2000) 
-  {
-    dataFile << environment->functionEvaluations << "\t" << maxScore << "\t" << totalScore/(float)headCount << "\t" << headCount << "\t" << totalGestationTime/(float)headCount << endl;
-    lastT1 = t;
-  }
-  */
-
-  if(t-lastT > 20000)
-  {
-    if (grid[args.width/2][args.height/2])
-    {
-      grid[args.width/2][args.height/2]->printCount=10;
-    }
-    lastT = t;
-  }
-
-  // TODO: Periodically save current state and data
 }
 
 
@@ -259,7 +220,6 @@ int main(int argc, char **argv)
   if ( initialize(argc, argv, args) )
     return 0;
 
-  // CH
   ofstream dataFile1, dataFile2;
   dataFile1.open((args.resultsBaseDir + args.resultsDir + "time1.dat").c_str());
   dataFile2.open((args.resultsBaseDir + args.resultsDir + "time2.dat").c_str());
@@ -267,28 +227,14 @@ int main(int argc, char **argv)
   reproducerFile.open((args.resultsBaseDir + args.resultsDir + "reproducers.dat").c_str());
 
   // Enter the main loop
-  int lastFunctionEvaluations = 0; // CH
   while(environment->functionEvaluations < args.totalFunctionEvaluations)
   {
-    loop(args, environment->functionEvaluations, lastFunctionEvaluations, dataFile1, dataFile2, reproducerFile);
+    loop(args, dataFile1, dataFile2, reproducerFile);
   }
 
   dataFile1.close();
   dataFile2.close();
   reproducerFile.close();
-
-
-  // CH
-  int i;
-  dataFile1.open((args.resultsBaseDir + args.resultsDir + "data.dat").c_str());
-  dataFile1 << "avgFitness = " << wholeResult/args.totalFunctionEvaluations << endl;
-  for(i=0; i<10; ++i)
-    dataFile1 << "avgFitnessDec" << i << " = " << decilesResult[i] / (args.totalFunctionEvaluations/10) << endl;
-  for(i=0; i<4; ++i)
-    dataFile1 << "avgFitnessQuart" << i << " = " << quartilesResult[i] / (args.totalFunctionEvaluations/4) << endl;
-  dataFile1 << "avgFitnessDec9Minus0 = " << (decilesResult[9] - decilesResult[0]) / (args.totalFunctionEvaluations/10) << endl;
-  dataFile1 << "avgFitnessQuart3Minus0 = " << (quartilesResult[3] - quartilesResult[0]) / (args.totalFunctionEvaluations/4) << endl;
-  dataFile1.close();
 
   // Free allocated memory
   cleanUp(args);

@@ -62,31 +62,38 @@ BaseDevMechanism::~BaseDevMechanism()
 }
 
 
+// *
+void BaseDevMechanism::printData(ofstream &stream)
+{
+  stream << "Data:" << endl;
+  for (vector<unsigned short>::iterator it = data.begin() ; it != data.end(); ++it)
+    stream << *it << " ";
+  stream << endl;
+}
+
+// *
+void BaseDevMechanism::printBodySpecification(ofstream &stream)
+{
+  stream << "Body specification:" << endl;
+  for (vector<unsigned short>::iterator it = bodySpecification.begin(); it != bodySpecification.end(); ++it)
+    stream << *it << " ";
+  stream << endl;
+}
+
 // **
 void BaseDevMechanism::printDecoder(ofstream &stream)
 {
 }
 
-// *
-// CH
-void BaseDevMechanism::printData(ofstream &stream)
-{
-  //stream << "ID: " << id << "  Parent ID: " << parentID << endl;
-  stream << "Data:" << endl;
-  for (vector<unsigned short>::iterator it = data.begin() ; it != data.end(); ++it)
-    stream << *it << " ";
-  stream << endl << "Body specification:" << endl;
-  for (vector<unsigned short>::iterator it = bodySpecification.begin(); it != bodySpecification.end(); ++it)
-    stream << *it << " ";
-  stream << endl;
-  //stream << "Gestation time: " << gestationTime << endl;
-  stream << "Print count: " << printCount << endl;
-}
 
 void BaseDevMechanism::print(ofstream &stream)
 {
-  printDecoder(stream);
+  stream << "ID: " << id << " Parent ID: " << parentID << endl;
+  stream << "Print count: " << printCount << endl;
+  stream << "Gestation time: " << gestationTime << endl;
   printData(stream);
+  printBodySpecification(stream);
+  printDecoder(stream);
   stream << endl << endl;
 }
 
@@ -196,7 +203,7 @@ void BaseDevMechanism::update(config &args)
 
       state          = START; // Finished reproduction cycle
 
-      if (printCount > 0) // CH
+      if (printCount > 0)
       {
 	child->printCount = printCount-1;
 	printCount = 0;

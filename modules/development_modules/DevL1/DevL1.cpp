@@ -17,7 +17,7 @@ using namespace std;
 
 void DevL1::printDecoder(ofstream &stream)
 {
-    stream << endl << "Production rules:" << endl;
+    stream << "Production rules:" << endl;
     for(map<triple, vector<unsigned short> >::iterator it = productionRules.begin(); it != productionRules.end(); ++it)
     {
       stream <<  it->first.x << "<" << it->first.y << ">" << it->first.z << " -> ";
@@ -25,7 +25,6 @@ void DevL1::printDecoder(ofstream &stream)
 	stream << *it2 << " ";
       stream << endl;
     }
-    stream << "Gestation time: " << gestationTime << endl;
 }
 
 // Create a new decoder, for an `orphan' cell
