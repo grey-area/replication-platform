@@ -9,10 +9,6 @@ using namespace std;
 
 #include "config.h"
 
-// Used to check if string starts with a given substring
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/lexical_cast.hpp>
-
 void setResultsDir(config &args)
 {
   ostringstream dirStream;
@@ -88,43 +84,37 @@ void sortUnregisteredOptions(config &args, vector<po::basic_option<char> > optio
     if (opt->unregistered)
     {
 
-      try
+      // If the string key starts with "dev-"
+      if ( (opt->string_key).substr(0,4) == "dev-" )
       {
-	// If the string key starts with "dev"
-	if (boost::starts_with(opt->string_key, "dev-"))
+	size_t delimPos = opt->string_key.find("-");
+	string key = opt->string_key.substr(delimPos+1, string::npos); 
+
+	// Only do anything if the option hasn't already been set. Has the effect that command line overrides config file, too.
+	if (not args.devArgs.count(key) )
 	{
-	  size_t delimPos = opt->string_key.find("-");
-	  string key = opt->string_key.substr(delimPos+1, string::npos); 
-
-	  // Only do anything if the option hasn't already been set. Has the effect that command line overrides config file, too.
-	  if (not args.devArgs.count(key) )
-	  {
-	    // If its a flag option, we'll know it's been set
-	    args.devArgs[key] = "";
-	    // If it has a value, put it in the map
-	    if ( opt->value.size() > 0 )
-	      args.devArgs[key] = (*opt).value[0];
-	  }
-	}
-
-	// If the string key starts with "env"
-	if (boost::starts_with(opt->string_key, "env-"))
-	{
-	  size_t delimPos = opt->string_key.find("-");
-	  string key = opt->string_key.substr(delimPos+1, string::npos); 
-
-	  if (not args.envArgs.count(key) )
-	  {
-	    // If its a flag option, we'll know it's been set
-	    args.envArgs[key] = "";
-	    // If it has a value, put it in the map
-	    if ( opt->value.size() > 0 )
-	      args.envArgs[key] = (*opt).value[0];
-	  }
+	  // If its a flag option, we'll know it's been set
+	  args.devArgs[key] = "";
+	  // If it has a value, put it in the map
+	  if ( opt->value.size() > 0 )
+	    args.devArgs[key] = (*opt).value[0];
 	}
       }
-      catch(boost::bad_lexical_cast)
+
+      // If the string key starts with "env-"
+      if ( (opt->string_key).substr(0,4) == "env-" )
       {
+	size_t delimPos = opt->string_key.find("-");
+	string key = opt->string_key.substr(delimPos+1, string::npos); 
+
+	if (not args.envArgs.count(key) )
+	{
+	  // If its a flag option, we'll know it's been set
+	  args.envArgs[key] = "";
+	  // If it has a value, put it in the map
+	  if ( opt->value.size() > 0 )
+	    args.envArgs[key] = (*opt).value[0];
+	}
       }
 
     }
