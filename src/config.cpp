@@ -84,51 +84,6 @@ ostream& operator << (ostream& o, config a)
 }
 
 
-// Given a vector of basic_options, take the unregistered ones whose string_keys begin with "dev" or "env", and put them in the devArgs or envArgs
-void sortUnregisteredOptions(config &args, vector<po::basic_option<char> > options)
-{
-  for(vector<po::basic_option<char> >::iterator opt=options.begin(); opt!=options.end(); ++opt)
-  {
-    if (opt->unregistered)
-    {
-
-      // If the string key starts with "dev-"
-      if ( (opt->string_key).substr(0,4) == "dev-" )
-      {
-	size_t delimPos = opt->string_key.find("-");
-	string key = opt->string_key.substr(delimPos+1, string::npos); 
-
-	// Only do anything if the option hasn't already been set. Has the effect that command line overrides config file, too.
-	if (not args.devArgs.count(key) )
-	{
-	  // If its a flag option, we'll know it's been set
-	  args.devArgs[key] = "";
-	  // If it has a value, put it in the map
-	  if ( opt->value.size() > 0 )
-	    args.devArgs[key] = (*opt).value[0];
-	}
-      }
-
-      // If the string key starts with "env-"
-      if ( (opt->string_key).substr(0,4) == "env-" )
-      {
-	size_t delimPos = opt->string_key.find("-");
-	string key = opt->string_key.substr(delimPos+1, string::npos); 
-
-	if (not args.envArgs.count(key) )
-	{
-	  // If its a flag option, we'll know it's been set
-	  args.envArgs[key] = "";
-	  // If it has a value, put it in the map
-	  if ( opt->value.size() > 0 )
-	    args.envArgs[key] = (*opt).value[0];
-	}
-      }
-
-    }
-  }  
-}
-
 // Create a config file based on the command-line arguments and config file arguments used in this run
 void writeConfigFile(config &args)
 {

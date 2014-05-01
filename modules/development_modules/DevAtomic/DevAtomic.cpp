@@ -1,5 +1,6 @@
 using namespace std;
 #include <iostream>
+#include <algorithm>
 #include "DevAtomic.h"
 
 /*

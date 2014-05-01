@@ -4,7 +4,7 @@ directories:
 	mkdir -p build
 
 replication: build/replication.o build/config.o build/misc.o $(shell pwd)/modules/lib/modules.so
-	g++ -O3 -o $@ -lboost_program_options $^; rm build -rf
+	g++ -O3 -o $@ $^; rm build -rf
 
 build/replication.o: ./src/replication.cpp
 	g++ -O3 -I./include -I./modules/include -c $< -o $@

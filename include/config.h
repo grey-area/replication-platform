@@ -3,9 +3,6 @@
 
 #include <vector>
 #include <map>
-#include "boost/program_options.hpp"
-
-namespace po = boost::program_options;
 
 struct config
 {
@@ -27,7 +24,6 @@ struct config
 
 void setResultsDir(config&);
 ostream& operator << (ostream&, config);
-void sortUnregisteredOptions(config&, vector<po::basic_option<char> >);
 void writeConfigFile(config&);
 int parseArguments(int, char**, config&);
 
