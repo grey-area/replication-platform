@@ -7,6 +7,14 @@
 #include <cstdlib>
 using namespace std;
 
+/*
+  To add a new option, it will have to be added to:
+   - the results directory string produced by setResultsDir (maybe)
+   - the << operator (maybe)
+   - the config parsing
+   - the command line parsing
+ */
+
 #include "config.h"
 
 void setResultsDir(config &args)
@@ -147,83 +155,158 @@ int parseArguments(int argc, char **argv, config &args)
   args.developmentMechanism = "BaseDevMechanism";
   args.environment = "BaseEnvironment";
 
-  // Options that can only be set from the command line
-  po::options_description commandLineOnly("Command line only");
-  commandLineOnly.add_options()
-    ("help", "produce help message")
-    ("config", po::value<string>(), "specify a configuration file")
-  ;
+  // Set options from config file
+  int c;
+  int option_index = 0;
+  static struct option long_options[] = {
+    {"config", 1, 0, 0},
+    {NULL, 0, NULL, 0}
+  };
+  opterr=false;
 
-  // Options that can be set from the command line or from a config file
-  po::options_description commandLineAndConfig("Command line or config. file");
-  commandLineAndConfig.add_options()
-    ("dir", po::value<string>(), "set the results directory")
-    ("seed", po::value<int>(&(args.seed)), "set seed. -1 = time(NULL)")
-    ("display", "show display")
-    ("debug", "turn on debugging")
-    ("developmentMechanism", po::value<string>(&(args.developmentMechanism)), "specify the development mechanism to use")
-    ("environment", po::value<string>(&(args.environment)), "specify the environment to use")
-    ("size", po::value<string>(), "set the size of the grid")
-    ("spawnRate", po::value<int>(&(args.spawnRate)), "set the rate at which new (orphan) organisms are introduced. Introduce one row of new organisms every spawnRate*populationSize function evaluations.")
-    ("averagingWindowLength", po::value<int>(&(args.averagingWindowLength)), "set the window length for the window averaged results")
-    ("time", po::value<int>(&(args.totalFunctionEvaluations)), "simulation time")
-  ;
-  po::options_description allOptions;
-  allOptions.add(commandLineOnly).add(commandLineAndConfig);
-
-  po::variables_map vm;
-  try
+  while ((c = getopt_long(argc, argv, "",
+	long_options, &option_index)) != -1)
   {
-    // Parse command line arguments
-    po::parsed_options parsed = po::command_line_parser(argc, argv).options(allOptions).allow_unregistered().run();
-    po::store(parsed, vm);
-    po::notify(vm);
-    // Sort unregistered command line options destined for the dev. mechanism/environment
-    sortUnregisteredOptions(args, parsed.options);
+    switch (c) {
+    case 0: // Long option
+      if (long_options[option_index].name == "config")
+      {
+	ifstream ifile(optarg);
+	string line;
 
-    // Parse arguments from config file
-    if (vm.count("config"))
-    {
-      ifstream configFileStream(vm["config"].as<string>());
-      po::parsed_options parsed = po::parse_config_file(configFileStream, commandLineAndConfig, true);
-      po::store(parsed, vm);
-      configFileStream.close();
-      // Sort unregistered config options destined for the dev. mechanism/environment
-      sortUnregisteredOptions(args, parsed.options);
+	while (getline(ifile,line))
+	{
+	  if (line.at(0) != '#')
+	  {
+	    if (line == "debug")
+	      args.debug = 1;
+	    else if (line == "display")
+	      args.display = 1;
+	    else
+	    {
+	      int loc = line.find('=');
+	      string key = line.substr(0,loc-1);
+	      string value = line.substr(loc+2,string::npos);
+	      if (key == "seed")
+		args.seed = atoi(value.c_str());
+	      else if (key == "developmentMechanism")
+		args.developmentMechanism = value;
+	      else if (key == "environment")
+		args.environment = value;
+	      else if (key == "size")
+	      {
+		size_t delimPos = value.find("x");
+		args.width  = stoi( value.substr(0, delimPos) );
+		args.height = stoi( value.substr(delimPos+1, string::npos) );
+	      }
+	      else if (key == "spawnRate")
+		args.spawnRate = atoi(value.c_str());
+	      else if (key == "averagingWindowLength")
+		args.averagingWindowLength = atoi(value.c_str());
+	      else if (key == "time")
+		args.totalFunctionEvaluations = atoi(value.c_str());
+	      else if (key.substr(0,4) == "dev-")
+	      {
+		if (value == "true")
+		  args.devArgs[key.substr(4, string::npos)] = "";
+		else
+		  args.devArgs[key.substr(4, string::npos)] = value;
+	      }
+	      else if (key.substr(0,4) == "env-")
+	      {
+		if (value == "true")
+		  args.envArgs[key.substr(4, string::npos)] = "";
+		else
+		  args.envArgs[key.substr(4, string::npos)] = value;
+	      }
+	      
+	    }
+	  }
+	}
+      }
+      break;
     }
   }
-  catch(po::error& e) 
-  { 
-    std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
-    std::cerr << allOptions << std::endl; 
-    return 1; 
-  } 
-  po::notify(vm);    
 
-  if (vm.count("help"))
+
+  static struct option long_options2[] = {
+    {"help", 0, 0, 0},
+    {"dir", 1, 0, 0},
+    {"seed", 1, 0, 0},
+    {"display", 0, &args.display, 1},
+    {"debug", 0, &args.debug, 1},
+    {"developmentMechanism", 1, 0, 0},
+    {"environment", 1, 0, 0},
+    {"size", 1, 0, 0},
+    {"spawnRate", 1, 0, 0},
+    {"averagingWindowLength", 1, 0, 0},
+    {"time", 1, 0, 0},
+    {NULL, 0, NULL, 0}
+  };
+
+  // Set options from command line
+  option_index = 0;
+  optind=1;
+  while ((c = getopt_long(argc, argv, "h",
+	long_options2, &option_index)) != -1)
   {
-    cout << allOptions  << "\n";
-    return 1;
-  }
+    switch (c) {
+    case 0: // Long option
+      if (long_options2[option_index].name == "help")
+      {
+	cout << "HELP" << endl;
+	return 1;
+      }
+      else if (long_options2[option_index].name == "dir")
+      {
+	string dir(optarg);
+	args.resultsBaseDir = string("./results/") + string(optarg) + string("/");
+      }
+      else if (long_options2[option_index].name == "seed")
+	args.seed = atoi(optarg);
+      else if (long_options2[option_index].name == "developmentMechanism")
+        args.developmentMechanism = string(optarg);
+      else if (long_options2[option_index].name == "environment")
+        args.environment = string(optarg);
+      else if (long_options2[option_index].name == "size")
+      {
+	string sizeString = string(optarg);
+	size_t delimPos = sizeString.find("x");
+	args.width  = stoi( sizeString.substr(0, delimPos) );
+	args.height = stoi( sizeString.substr(delimPos+1, string::npos) );
+      }
+      else if (long_options2[option_index].name == "spawnRate")
+	args.spawnRate = atoi(optarg);
+      else if (long_options2[option_index].name == "averagingWindowLength")
+	args.averagingWindowLength = atoi(optarg);
+      else if (long_options2[option_index].name == "time")
+	args.totalFunctionEvaluations = atoi(optarg);
 
-  if (vm.count("display"))
-    args.display = true;
-  if (vm.count("debug"))
-    args.debug = true;
+      break;
+    case 'h':
+      cout << "HELP" << endl;
+      return 1;
+      break;
+    case '?':
+      map<string,string> *dict;
+      string key = string(argv[optind-1]).substr(2, string::npos);
+      if (key.substr(0,4) == "dev-")
+	dict = &args.devArgs;
+      else if (key.substr(0,4) == "env-")
+	dict = &args.envArgs;
+      else
+	break;
+      int  loc = key.find('=');
+      if (loc == string::npos)
+	(*dict)[key.substr(4, string::npos)] = "";
+      else
+      {
+	string value = key.substr(loc+1, string::npos);
+	(*dict)[key.substr(4,loc-4)] = value;
+      }	
 
-  if (vm.count("dir"))
-    args.resultsBaseDir = string("./results/") + vm["dir"].as<string>() + "/";
-
-  if (args.resultsBaseDir=="./results/default/")
-    cout << "Warning: results directory not set, putting results in ./results/default." << endl;
-
-  // Some parsing for grid size. We expect string of format "widthxheight".
-  if (vm.count("size"))
-  {
-    string sizeString = vm["size"].as<string>();
-    size_t delimPos = sizeString.find("x");
-    args.width  = stoi( sizeString.substr(0, delimPos) );
-    args.height = stoi( sizeString.substr(delimPos+1, string::npos) );
+      break;
+    }
   }
 
   cout << args << endl;

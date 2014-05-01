@@ -12,8 +12,8 @@ struct config
   string       resultsBaseDir;
   string       resultsDir;
   int          seed;
-  bool         display;
-  bool         debug;
+  int          display;
+  int          debug;
   int          width;
   int          height;
   int          spawnRate;
