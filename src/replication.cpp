@@ -23,44 +23,74 @@ using namespace std;
 #include "BaseEnvironment.h"
 #include "module_handler.h"
 
-// The grid of organisms
-vector <vector <BaseDevMechanism* > > grid;
-// The environment, which implements the fitness function(s)
-BaseEnvironment *environment;
-
 float populationFitnessAverage = 0.0;
 int populationGestationTimeAverage = 0;
 float longWindowFitnessAverage = 0.0;
 
+void debugPrint(config &args, globalVars &global)
+{
+  for (int i=0; i<args.width; i++)
+  {
+    for (int j=0; j<args.height; j++)
+    {
+      if (global.grids[global.gridIndex][i][j])
+	cout << global.grids[global.gridIndex][i][j]->id << "\t";
+      else
+	cout << "000000\t";
+    }
+    cout << endl;
+  }
+  cout << endl;
+  for (int i=0; i<args.width; i++)
+  {
+    for (int j=0; j<args.height; j++)
+    {
+      if (global.grids[1-global.gridIndex][i][j])
+	cout << global.grids[1-global.gridIndex][i][j]->id << "\t";
+      else
+	cout << "000000\t";
+    }
+    cout << endl;
+  }
+  cout << endl << "*********************" << endl;
+}
+
 // Put some random, new (orphan) organisms on the grid. Periodically called. (How frequently? parameter?)
-void newOrganisms(config &args)
+void newOrganisms(config &args, globalVars &global)
 {
   for(int j=0;j<args.height; j++)
   {
-    if (grid[0][j])
-      deleteOrganism(args, grid[0][j]);
+    // If there's already a new organism there, delete it
+    if ( global.grids[1-global.gridIndex][0][j] and global.grids[1-global.gridIndex][0][j] != global.grids[global.gridIndex][0][j])
+      deleteOrganism(args, global.grids[1-global.gridIndex][0][j]);
     // Ask the model_handler for a new organism
-    grid[0][j] = newOrganism(args); 
-    grid[0][j]->initializeOrphan(args);
+    global.grids[1-global.gridIndex][0][j] = newOrganism(args); 
+    global.grids[1-global.gridIndex][0][j]->initializeOrphan(args);
   }
+
+  //cout << "Placing new organisms" << endl;
+  //debugPrint(args, global);
 }
 
 // Place the child on the grid
-void placeChild(config &args, BaseDevMechanism *child, int i, int j, int &x, int &y)
+void placeChild(config &args, globalVars &global, BaseDevMechanism *child, int i, int j, int &x, int &y)
 {
-  // Put the child in a random cell neighbouring the parent
+  // Put the child in a random cell neighbouring the parent (in the other grid)
   x = mod((i+rand()%3-1), args.width);
   y = mod((j +rand()%3-1), args.height);
 
-  // If the cell is already occupied, delete the entity there
-  if (grid[x][y])
-    deleteOrganism(args, grid[x][y]);
+  // If the cell is already occupied by a new organism, delete it
+  if (global.grids[1-global.gridIndex][x][y] and global.grids[1-global.gridIndex][x][y] != global.grids[global.gridIndex][x][y])
+    deleteOrganism(args, global.grids[1-global.gridIndex][x][y]);
 
-  grid[x][y] = child;
+  global.grids[1-global.gridIndex][x][y] = child;
+
+  //cout << "Placing child" << endl;
+  //debugPrint(args, global);
 }
 
 // Initialization
-int initialize(int argc, char **argv, config &args)
+int initialize(int argc, char **argv, config &args, globalVars &global)
 {
   // Parse command line arguments, put result in args struct (see arguments.h)
   // args.developmentMechanism is the name of the developmental mechanism we'll use
@@ -80,35 +110,46 @@ int initialize(int argc, char **argv, config &args)
   BaseDevMechanism::setArgs(args);
 
   // Initialize a 2D grid of pointers to (NULL) organisms
-  grid.resize(args.width);
-  for(int i=0; i<args.width; i++)
+  global.grids.resize(2);
+  for (int g=0; g<2; g++)
   {
-    grid[i].resize(args.height);
-    for(int j=0; j<args.height; j++)
-      grid[i][j] = NULL;
+    global.grids[g].resize(args.width);
+    for(int i=0; i<args.width; i++)
+    {
+      global.grids[g][i].resize(args.height);
+      for(int j=0; j<args.height; j++)
+	global.grids[g][i][j] = NULL;
+    }
   }
+  global.gridIndex = 0;
 
   // Ask the model_handler for a new environment object
-  environment = newEnvironment(args);
-  environment->grid = &grid;
+  global.environment = newEnvironment(args);
 
   // Put some new (orphan) entities on the grid
-  newOrganisms(args);
+  newOrganisms(args, global);
 
   return 0;
 }
 
 
 // Main loop
-int loop(config &args, ofstream &dataFile1, ofstream &dataFile2, ofstream &reproducerFile)
+int loop(config &args, globalVars &global, ofstream &dataFile1, ofstream &dataFile2, ofstream &reproducerFile)
 {
+  global.gridIndex = 1 - global.gridIndex;
+
+  //cout << "Switching frame" << endl;
+  //debugPrint(args, global);
+
   int headCount = 0;
   float totalScore = 0.0;
   float maxScore = 0.0;
   int totalGestationTime = 0;
 
+  int placeNewOrganisms = 0;
+
   // If fitnesses are periodically updated, update them
-  environment->updateFitnesses(args);
+  global.environment->updateFitnesses(args, global);
 
   // Call update on each organism periodically
   // TODO: change mechanism? (Instead of looping over all...?)
@@ -116,13 +157,40 @@ int loop(config &args, ofstream &dataFile1, ofstream &dataFile2, ofstream &repro
   {
     for(int j=0; j<args.height; j++)
     {
-      if (grid[i][j]) // If there is an entity there
+      //cout << "cell " << i << ", " << j << endl;
+      if (global.grids[global.gridIndex][i][j]) // If there is an entity there
       {
+	// Make the other grid the same as this one, unless the entity on the other grid is new
+	// If we do replace what was in the other grid, delete the entity
+	if (global.grids[global.gridIndex][i][j] != global.grids[1-global.gridIndex][i][j])
+	{
+	  // If there is something in the old grid and it's not new
+	  if ( global.grids[1-global.gridIndex][i][j] )
+	  {
+	    if ( global.grids[1-global.gridIndex][i][j]->age > 0 )
+	    {
+	      deleteOrganism(args, global.grids[1-global.gridIndex][i][j]);
+	      global.grids[1-global.gridIndex][i][j] = global.grids[global.gridIndex][i][j];
+
+	      //cout << "Making old frame match current frame" << endl;
+	      //debugPrint(args, global);
+	    }
+	  }
+	  else // if there isn't something in old grid 
+	  {
+	    global.grids[1-global.gridIndex][i][j] = global.grids[global.gridIndex][i][j];
+
+	    //cout << "Making old frame match current frame" << endl;
+	    //debugPrint(args, global);
+	  }
+	}
+
+	global.grids[global.gridIndex][i][j]->age++;
 	headCount++;
-	totalGestationTime += grid[i][j]->gestationTime;
-	totalScore += grid[i][j]->score;
-	if (grid[i][j]->score > maxScore)
-	  maxScore = grid[i][j]->score;
+	totalGestationTime += global.grids[global.gridIndex][i][j]->gestationTime;
+	totalScore += global.grids[global.gridIndex][i][j]->score;
+	if (global.grids[global.gridIndex][i][j]->score > maxScore)
+	  maxScore = global.grids[global.gridIndex][i][j]->score;
 
 	// Tournament selection between this entity and one of its neighbours. Selection determines who gets executed next
 	int i2 = mod(i + rand()%3 - 1, args.width);
@@ -133,17 +201,19 @@ int loop(config &args, ofstream &dataFile1, ofstream &dataFile2, ofstream &repro
 	  j2 = mod(j + rand()%3 - 1, args.height);
 	int ie = i;
 	int je = j;
-	if (grid[i2][j2] and grid[i2][j2]->fitness > grid[i][j]->fitness)
+	if (global.grids[global.gridIndex][i2][j2] and global.grids[global.gridIndex][i2][j2]->fitness > global.grids[global.gridIndex][i][j]->fitness)
 	{
 	  ie = i2;
 	  je = j2;
 	}
-	
-	BaseDevMechanism *entity = grid[ie][je];
+
+	//cout << "update " << ie << ", " << je << endl << endl;
+
+	BaseDevMechanism *entity = global.grids[global.gridIndex][ie][je];
 
 	// Update the entity. See BaseDevMechanism.cpp for update cycle. Most time will be spent calling the decode function
 	// which is implemented by a subclass of BaseDevMechanism
-	entity->update(args);
+	entity->update(args, global);
 
 	// If the entity has a non-embryonic child (has just reproduced)
 	if (entity->child and (entity->child)->state != EMBRYO)
@@ -153,47 +223,52 @@ int loop(config &args, ofstream &dataFile1, ofstream &dataFile2, ofstream &repro
 
 	  int x,y;
 	  // Place the child in the neighbourhood of the parent.
-	  placeChild(args, child, ie, je, x, y);
+	  placeChild(args, global, child, ie, je, x, y);
+	  
 	  // Send the child's body specification to the task environment, setting its fitness.
-	  environment->interpretBody(args, x, y);
+	  global.environment->interpretBody(args, global, x, y);
+	  // TODO: made it print out every one
+	  if (global.environment->functionEvaluations>100000 and global.environment->functionEvaluations<120000)
+	    //global.grids[global.gridIndex][x][y]->printCount=1;
 
 	  if (child->printCount>0)
 	  {
-	    reproducerFile << "Function evaluations:" << environment->functionEvaluations << endl;
+	    reproducerFile << "Function evaluations:" << global.environment->functionEvaluations << endl;
 	    child->print(reproducerFile);
 	  }
 
+	  // TODO added this to discount drops due to function change, and added below to record probability of beneficial mutation
+	  //global.environment->interpretBody(args, ie, je);
+	  //global.environment->functionEvaluations -= 1;
+	  //populationFitnessAverage += (child->fitness - entity->fitness) > 0;
 	  populationFitnessAverage += child->fitness;
 	  populationGestationTimeAverage += child->gestationTime;
+	  //longWindowFitnessAverage += (child->fitness - entity->fitness) > 0;
 	  longWindowFitnessAverage += child->fitness;
-
-
 
 	  // # function evaluations is only ever updated inside this block. Do all time-related things here.
 	  // Output population average fitness and average gestation time
-	  if ((environment->functionEvaluations) % (args.width*args.height) == 0)
+	  if ((global.environment->functionEvaluations) % (args.width*args.height) == 0)
 	  {
-	    dataFile1 << environment->functionEvaluations << "\t" << populationFitnessAverage/(args.width*args.height) << "\t" << populationGestationTimeAverage/(float)(args.width*args.height) << endl;
+	    dataFile1 << global.environment->functionEvaluations << "\t" << populationFitnessAverage/(args.width*args.height) << "\t" << populationGestationTimeAverage/(float)(args.width*args.height) << endl;
 	    populationFitnessAverage = 0.0;
 	    populationGestationTimeAverage = 0;
 	  }
 	  // Output long window average fitness
-	  if ((environment->functionEvaluations) % args.averagingWindowLength == 0)
+	  if ((global.environment->functionEvaluations) % args.averagingWindowLength == 0)
 	  {
-	    dataFile2 << environment->functionEvaluations - args.averagingWindowLength/2 << "\t" << longWindowFitnessAverage/(float)args.averagingWindowLength << endl;
+	    dataFile2 << global.environment->functionEvaluations - args.averagingWindowLength/2 << "\t" << longWindowFitnessAverage/(float)args.averagingWindowLength << endl;
 	    longWindowFitnessAverage = 0.0;
 	  }
-	  if ((environment->functionEvaluations) % 20000 == 0)
+	  if ((global.environment->functionEvaluations) % 20000 == 0)
 	  {
-	    if (grid[0][0])
-	      grid[0][0]->printCount=10;
+	    //if (global.grids[global.gridIndex][0][0])
+	    //  global.grids[global.gridIndex][0][0]->printCount=10;
 	  }
 
 	  // Every so often, add new (orphan) entities to one line of the grid
-	  if (environment->functionEvaluations%(args.spawnRate*args.width*args.height)==args.spawnRate*args.width*args.height-1)
-	    newOrganisms(args);
-
-
+	  if (global.environment->functionEvaluations%(args.spawnRate*args.width*args.height)==args.spawnRate*args.width*args.height-1)
+	    placeNewOrganisms = 1;
 
 	}
 
@@ -201,34 +276,46 @@ int loop(config &args, ofstream &dataFile1, ofstream &dataFile2, ofstream &repro
     } // end of cell update
   } // end of row update
 
+  if (placeNewOrganisms)
+  {
+    newOrganisms(args, global);
+    //debugPrint(args, global);
+  }
+
 }
 
 
 
 // Clean up memory
-void cleanUp(config &args)
+void cleanUp(config &args, globalVars &global)
 {
   for(int i=0; i<args.width; i++)
   {
     for(int j=0; j<args.height; j++)
     {
-      if (grid[i][j])
+      if (global.grids[0][i][j] == global.grids[1][i][j])
+	global.grids[1][i][j] = NULL;
+      for(int g=0; g<2; g++)
       {
-        deleteOrganism(args, grid[i][j]);
+	if (global.grids[g][i][j])
+	{
+	  deleteOrganism(args, global.grids[g][i][j]);
+	}
       }
     }
   }
 
-  deleteEnvironment(args, environment);
+  deleteEnvironment(args, global.environment);
 }
 
 
 int main(int argc, char **argv)
 {
   config args;
+  globalVars global;
 
   // Parse arguments and initialize grid
-  if ( initialize(argc, argv, args) )
+  if ( initialize(argc, argv, args, global) )
     return 0;
 
   ofstream dataFile1, dataFile2;
@@ -238,9 +325,9 @@ int main(int argc, char **argv)
   reproducerFile.open((args.resultsBaseDir + args.resultsDir + "reproducers.dat").c_str());
 
   // Enter the main loop
-  while(environment->functionEvaluations < args.totalFunctionEvaluations)
+  while(global.environment->functionEvaluations < args.totalFunctionEvaluations)
   {
-    loop(args, dataFile1, dataFile2, reproducerFile);
+    loop(args, global, dataFile1, dataFile2, reproducerFile);
   }
 
   dataFile1.close();
@@ -248,6 +335,6 @@ int main(int argc, char **argv)
   reproducerFile.close();
 
   // Free allocated memory
-  cleanUp(args);
+  cleanUp(args, global);
   return 0;
 }

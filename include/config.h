@@ -22,6 +22,16 @@ struct config
   map <string, string> envArgs;
 };
 
+class BaseDevMechanism; // Forward declarations so I can have pointers to these objects without including the .hs (circular includes)
+class BaseEnvironment;
+
+struct globalVars
+{
+  BaseEnvironment *environment;
+  std::vector <std::vector <std::vector <BaseDevMechanism*> > > grids;
+  int gridIndex;
+};
+
 void setResultsDir(config&);
 ostream& operator << (ostream&, config);
 void writeConfigFile(config&);

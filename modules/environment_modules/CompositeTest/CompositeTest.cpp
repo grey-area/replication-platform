@@ -4,11 +4,11 @@ using namespace std;
 #include "CompositeTest.h"
 
 // Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future
-void CompositeTest::interpretBody(config &args, int x, int y, int t)
+void CompositeTest::interpretBody(config &args, globalVars &global, int x, int y, int t)
 {
   functionEvaluations += 1;
 
-  BaseDevMechanism *rep = (*grid)[x][y];
+  BaseDevMechanism *rep = global.grids[global.gridIndex][x][y];
   rep->fitness = 0.0;
 
   int cycle = 10000000;
@@ -69,7 +69,7 @@ void CompositeTest::interpretBody(config &args, int x, int y, int t)
   }
 }
 
-void CompositeTest::updateFitnesses(config &args)
+void CompositeTest::updateFitnesses(config &args, globalVars &global)
 {
 }
 

@@ -58,7 +58,9 @@ BaseDevMechanism::~BaseDevMechanism()
   config args;
   args.developmentMechanism = devName;
   if (child and (child->state)==EMBRYO)
+  {
     deleteOrganism(args, child);
+  }
 }
 
 
@@ -96,6 +98,7 @@ void BaseDevMechanism::print(ofstream &stream)
   stream << "ID: " << id << " Parent ID: " << parentID << endl;
   stream << "Print count: " << printCount << endl;
   stream << "Gestation time: " << gestationTime << endl;
+  stream << "Fitness: " << fitness << endl;
   printData(stream);
   printBodySpecification(stream);
   printDecoder(stream);
@@ -192,10 +195,8 @@ void BaseDevMechanism::decode(config &args)
 }
 
 
-void BaseDevMechanism::update(config &args)
+void BaseDevMechanism::update(config &args, globalVars &global)
 {
-  age++;
-
   switch(state)
   {
     case START:
@@ -224,7 +225,7 @@ void BaseDevMechanism::update(config &args)
       break;
 
     case REPRODUCED:
-      
+
       child->fitness = fitness;
       child->score   = score;
       child->state   = START; // No longer an embryo!

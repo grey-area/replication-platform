@@ -5,9 +5,10 @@ using namespace std;
 
 
 // Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future, and maybe evaluate it now
-void EnvRepeatedCycle::interpretBody(config &args, int x, int y)
+void EnvRepeatedCycle::interpretBody(config &args, globalVars &global, int x, int y)
 {
-  BaseDevMechanism *rep = (*grid)[x][y];
+  // TODO should probably pass the grid in. When interpret?
+  BaseDevMechanism *rep = global.grids[1-global.gridIndex][x][y];
   rep->fitness = 0.0;
   rep->score   = 0.0;
 
@@ -44,7 +45,7 @@ void EnvRepeatedCycle::interpretBody(config &args, int x, int y)
 
 
 // Maybe evaluate the fitnesses of every entity
-void EnvRepeatedCycle::updateFitnesses(config &args)
+void EnvRepeatedCycle::updateFitnesses(config &args, globalVars &global)
 {
 
 /*for (vector<vector<BaseDevMechanism*> >::iterator i = grid->begin(); i != grid->end();++i) 

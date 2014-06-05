@@ -256,13 +256,13 @@ def recompile():
             with open("environment_modules/" + module + "/" + module + ".h", 'w') as hFile:
                 hFile.write("#include \"BaseEnvironment.h\"\n\nclass ")
                 hFile.write(module + " : public BaseEnvironment\n{\npublic:\n\n")
-                hFile.write("  void interpretBody(config&,int,int);\n  void updateFitnesses(config&);\n\n\n  " + module + "(config&);\n  ~" + module + "();\n\nprivate:\n\n};\n")
+                hFile.write("  void interpretBody(config&,globalVars&,int,int);\n  void updateFitnesses(config&,globalVars&);\n\n\n  " + module + "(config&);\n  ~" + module + "();\n\nprivate:\n\n};\n")
                 returnString += "Generated " + module + ".h\n"
             with open("environment_modules/" + module + "/" + module + ".cpp", 'w') as cppFile:
                 cppFile.write("using namespace std;\n#include <iostream>\n\n")
                 cppFile.write("#include \"" + module + ".h\"\n\n// Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future\n")
-                cppFile.write("void " + module + "::interpretBody(config &args, int x, int y)\n{\n}\n\n")
-                cppFile.write("void " + module + "::updateFitnesses(config &args)\n{\n}\n\n")
+                cppFile.write("void " + module + "::interpretBody(config &args, globalVars &global, int x, int y)\n{\n}\n\n")
+                cppFile.write("void " + module + "::updateFitnesses(config &args, globalVars &global)\n{\n}\n\n")
                 cppFile.write(module + "::" + module + "(config &args) : BaseEnvironment(args)\n{\n}\n\n" + module + "::~" + module + "()\n{\n}\n")
                 returnString += "Generated " + module + ".cpp\n"
 

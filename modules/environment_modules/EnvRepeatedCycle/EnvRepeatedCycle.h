@@ -4,8 +4,8 @@ class EnvRepeatedCycle : public BaseEnvironment
 {
  public:
 
-  void interpretBody(config&,int,int);
-  void updateFitnesses(config&);
+  void interpretBody(config&,globalVars&,int,int);
+  void updateFitnesses(config&,globalVars&);
 
   EnvRepeatedCycle(config&);
   ~EnvRepeatedCycle();

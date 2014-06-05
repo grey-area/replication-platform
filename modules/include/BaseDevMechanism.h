@@ -49,7 +49,7 @@ public:
   void initializeOrphan(config&);
   // For printing the state of the organism
   void print(ofstream&);
-  void update(config&);
+  void update(config&,globalVars&);
 
   BaseDevMechanism(config&);
   virtual ~BaseDevMechanism();
