@@ -20,6 +20,7 @@ struct config
   string       environment;
   map <string, string> devArgs;
   map <string, string> envArgs;
+  int          pid;
 };
 
 class BaseDevMechanism; // Forward declarations so I can have pointers to these objects without including the .hs (circular includes)

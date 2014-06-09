@@ -45,6 +45,7 @@ void setResultsDir(config &args)
   dirStream << "spawnRate/" << args.spawnRate << "/";
 
   dirStream << "run/" << getpid() << "-" << args.seed << "/";
+  args.pid = getpid();
 
   args.resultsDir = dirStream.str();
 }

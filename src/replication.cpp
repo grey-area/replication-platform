@@ -98,7 +98,7 @@ int initialize(int argc, char **argv, config &args, globalVars &global)
     return 1;
 
   if (args.seed==-1)
-    args.seed = time(NULL);
+    args.seed = time(NULL) + args.pid;
   srand(args.seed);
 
   // Make the directory in which the results will go
