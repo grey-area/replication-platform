@@ -5,6 +5,9 @@
 #include <cstdio>
 #include <getopt.h>
 #include <cstdlib>
+#include <sys/types.h>
+#include <unistd.h>
+
 using namespace std;
 
 /*
@@ -41,7 +44,7 @@ void setResultsDir(config &args)
   dirStream << "size/" << args.width << "x" << args.height << "/";
   dirStream << "spawnRate/" << args.spawnRate << "/";
 
-  dirStream << "run/" << args.seed << "/";
+  dirStream << "run/" << getpid() << "-" << args.seed << "/";
 
   args.resultsDir = dirStream.str();
 }
