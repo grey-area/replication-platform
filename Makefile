@@ -10,7 +10,7 @@ build/replication.o: ./src/replication.cpp
 	g++ -O3 -I./include -I./modules/include -c $< -o $@
 
 build/config.o: ./src/config.cpp ./include/config.h
-	g++ -O3 -std=c++0x -I./include/  -fpic -c $< -o $@
+	g++ -O3 -I./include/  -fpic -c $< -o $@
 
 build/misc.o: ./src/misc.cpp ./include/misc.h
 	g++ -O3 -I./include/ -fpic -c $< -o $@

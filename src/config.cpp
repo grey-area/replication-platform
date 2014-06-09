@@ -88,7 +88,8 @@ ostream& operator << (ostream& o, config a)
 void writeConfigFile(config &args)
 {
   ofstream configFile;
-  configFile.open(args.resultsBaseDir + args.resultsDir + "config.cfg");
+  string filename = args.resultsBaseDir + args.resultsDir + "config.cfg";
+  configFile.open(filename.c_str());
   configFile << args;
   configFile.close();
 }
@@ -151,8 +152,15 @@ int parseArguments(int argc, char **argv, config &args)
 	      else if (key == "size")
 	      {
 		size_t delimPos = value.find("x");
-		args.width  = stoi( value.substr(0, delimPos) );
-		args.height = stoi( value.substr(delimPos+1, string::npos) );
+
+		string width_string = value.substr(0, delimPos);
+		stringstream ss_w(width_string);
+		ss_w >> args.width;
+
+		string height_string = value.substr(delimPos+1, string::npos);
+		stringstream ss_h(height_string);
+		ss_h >> args.height;
+
 	      }
 	      else if (key == "spawnRate")
 		args.spawnRate = atoi(value.c_str());
@@ -227,8 +235,15 @@ int parseArguments(int argc, char **argv, config &args)
       {
 	string sizeString = string(optarg);
 	size_t delimPos = sizeString.find("x");
-	args.width  = stoi( sizeString.substr(0, delimPos) );
-	args.height = stoi( sizeString.substr(delimPos+1, string::npos) );
+
+	string width_string = sizeString.substr(0, delimPos);
+	stringstream ss_w(width_string);
+	ss_w >> args.width;
+
+	string height_string = sizeString.substr(delimPos+1, string::npos);
+	stringstream ss_h(height_string);
+	ss_h >> args.height;
+
       }
       else if (long_options2[option_index].name == "spawnRate")
 	args.spawnRate = atoi(optarg);
