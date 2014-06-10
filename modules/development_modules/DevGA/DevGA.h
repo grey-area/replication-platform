@@ -3,7 +3,7 @@
 class DevGA : public BaseDevMechanism
 {
  public:
-  DevGA(config&);
+  DevGA(config&, globalVars&);
   ~DevGA();
 
   // Optional

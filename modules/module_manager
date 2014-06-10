@@ -65,16 +65,16 @@ moduleHandler2 = """
 """
 
 moduleHandler3 = """
-BaseDevMechanism* newOrganism(config &args)
+BaseDevMechanism* newOrganism(config &args, globalVars &global)
 {
   BaseDevMechanism *m;
 
   if (args.developmentMechanism=="BaseDevMechanism")
-    m = new BaseDevMechanism(args);
+    m = new BaseDevMechanism(args, global);
 """
 
 moduleHandler4 = """  else                         
-    m = new BaseDevMechanism(args);
+    m = new BaseDevMechanism(args, global);
 
   return m;
 }
@@ -167,7 +167,7 @@ def recompile():
         moduleHandlerString += "#include \"" + module + ".h\"\n"
     moduleHandlerString += moduleHandler3
     for module in developmentModules:
-        moduleHandlerString += "  else if (args.developmentMechanism==\"" + module + "\")\n    m = new " + module + "(args);\n"
+        moduleHandlerString += "  else if (args.developmentMechanism==\"" + module + "\")\n    m = new " + module + "(args, global);\n"
     moduleHandlerString += moduleHandler4
     for module in developmentModules:
         moduleHandlerString += "  else if (args.developmentMechanism==\"" + module + "\")\n    delete ((" + module + "*)organismObject);\n"
@@ -211,7 +211,7 @@ def recompile():
 
                 hFile.write("#include \"BaseDevMechanism.h\"\n\nclass ")
                 hFile.write(module + " : public BaseDevMechanism\n{\n public:\n  ")
-                hFile.write(module + "(config&);\n  ~" + module + "();\n")
+                hFile.write(module + "(config&, globalVars&);\n  ~" + module + "();\n")
                 hString = """
   // Optional
   //void mutateData(config&, vector<unsigned short>&);
@@ -263,7 +263,7 @@ def recompile():
                 cppFile.write("#include \"" + module + ".h\"\n\n// Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future\n")
                 cppFile.write("void " + module + "::interpretBody(config &args, globalVars &global, int x, int y)\n{\n}\n\n")
                 cppFile.write("void " + module + "::updateFitnesses(config &args, globalVars &global)\n{\n}\n\n")
-                cppFile.write(module + "::" + module + "(config &args) : BaseEnvironment(args)\n{\n}\n\n" + module + "::~" + module + "()\n{\n}\n")
+                cppFile.write(module + "::" + module + "(config &args, globalVars &global) : BaseEnvironment(args, global)\n{\n}\n\n" + module + "::~" + module + "()\n{\n}\n")
                 returnString += "Generated " + module + ".cpp\n"
 
 

@@ -29,7 +29,7 @@ public:
 
   void printDecoder(ofstream &stream);
 
-  DevL1(config &args);
+  DevL1(config &args, globalVars &global);
   ~DevL1();
 
  private:

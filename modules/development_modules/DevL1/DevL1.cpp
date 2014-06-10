@@ -333,7 +333,7 @@ void DevL1::decode(config &args)
 
 }
 
-DevL1::DevL1(config &args) : BaseDevMechanism(args)
+DevL1::DevL1(config &args, globalVars &global) : BaseDevMechanism(args, global)
 {
   type = LOOPY;
   if ( args.devArgs.count("type") )

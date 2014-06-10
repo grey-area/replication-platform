@@ -36,7 +36,7 @@ void DevGA::decode(config &args)
 
 // Initialize any mechanism-specific variables. Set variables from
 // command line/config file.
-DevGA::DevGA(config &args) : BaseDevMechanism(args)
+DevGA::DevGA(config &args, globalVars &global) : BaseDevMechanism(args, global)
 {
   // Setting variables from command line/config file
   //if ( args.devArgs.count("example") )

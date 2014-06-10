@@ -36,9 +36,11 @@ void BaseDevMechanism::setArgs(config &args)
     maxDataSize = 100;
 }
 
-BaseDevMechanism::BaseDevMechanism(config &args)
+BaseDevMechanism::BaseDevMechanism(config &args, globalVars &global)
 {
-  id = rand()%1000000;
+  id = global.nextID;
+  global.nextID++; 
+
   parentID = 0;
 
   // The default state of a new organism
@@ -202,7 +204,7 @@ void BaseDevMechanism::update(config &args, globalVars &global)
     case START:
 
       // Create new child
-      child = newOrganism(args);
+      child = newOrganism(args, global);
       child->parentID = id;
       gestationTime = 0;
 

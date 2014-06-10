@@ -175,7 +175,7 @@ void DevAtomic::decode(config &args)
   }
 }
 
-DevAtomic::DevAtomic(config &args) : BaseDevMechanism(args)
+DevAtomic::DevAtomic(config &args, globalVars &global) : BaseDevMechanism(args, global)
 {
   isetSize = 42;
   ip = code.begin();

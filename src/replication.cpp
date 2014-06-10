@@ -64,7 +64,7 @@ void newOrganisms(config &args, globalVars &global)
     if ( global.grids[1-global.gridIndex][0][j] and global.grids[1-global.gridIndex][0][j] != global.grids[global.gridIndex][0][j])
       deleteOrganism(args, global.grids[1-global.gridIndex][0][j]);
     // Ask the model_handler for a new organism
-    global.grids[1-global.gridIndex][0][j] = newOrganism(args); 
+    global.grids[1-global.gridIndex][0][j] = newOrganism(args, global); 
     global.grids[1-global.gridIndex][0][j]->initializeOrphan(args);
   }
 
@@ -97,13 +97,14 @@ int initialize(int argc, char **argv, config &args, globalVars &global)
   if ( parseArguments(argc, argv, args) )
     return 1;
 
+  // Make the directory in which the results will go
+  setResultsDir(args);
+  _mkdir((args.resultsBaseDir + args.resultsDir).c_str());
+
   if (args.seed==-1)
     args.seed = time(NULL) + args.pid;
   srand(args.seed);
 
-  // Make the directory in which the results will go
-  setResultsDir(args);
-  _mkdir((args.resultsBaseDir + args.resultsDir).c_str());
   // Write the current options to a config file in the results directory
   writeConfigFile(args);
 
@@ -122,6 +123,7 @@ int initialize(int argc, char **argv, config &args, globalVars &global)
     }
   }
   global.gridIndex = 0;
+  global.nextID = 0;
 
   // Ask the model_handler for a new environment object
   global.environment = newEnvironment(args);
@@ -228,8 +230,8 @@ int loop(config &args, globalVars &global, ofstream &dataFile1, ofstream &dataFi
 	  // Send the child's body specification to the task environment, setting its fitness.
 	  global.environment->interpretBody(args, global, x, y);
 	  // TODO: made it print out every one
-	  if (global.environment->functionEvaluations>100000 and global.environment->functionEvaluations<120000)
-	    //global.grids[global.gridIndex][x][y]->printCount=1;
+	  if (global.environment->functionEvaluations>0 and global.environment->functionEvaluations<120000)
+	    global.grids[1-global.gridIndex][x][y]->printCount=1;
 
 	  if (child->printCount>0)
 	  {

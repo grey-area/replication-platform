@@ -5,7 +5,7 @@ class DevAtomic : public BaseDevMechanism
 {
 public:
 
-  DevAtomic(config &args);
+  DevAtomic(config &args, globalVars &global);
   ~DevAtomic();
 
  private:

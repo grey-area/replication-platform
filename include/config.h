@@ -31,6 +31,8 @@ struct globalVars
   BaseEnvironment *environment;
   std::vector <std::vector <std::vector <BaseDevMechanism*> > > grids;
   int gridIndex;
+
+  int nextID;
 };
 
 void setResultsDir(config&);

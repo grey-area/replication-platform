@@ -51,7 +51,7 @@ public:
   void print(ofstream&);
   void update(config&,globalVars&);
 
-  BaseDevMechanism(config&);
+  BaseDevMechanism(config&, globalVars&);
   virtual ~BaseDevMechanism();
 
  private:

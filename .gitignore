@@ -19,6 +19,8 @@ gitstats
 notes
 results
 
+*.md
+
 # These files are generated
 replication
 modules/Makefile
