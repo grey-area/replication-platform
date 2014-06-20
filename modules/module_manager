@@ -26,7 +26,7 @@ directories:
 
 lib/modules.so: build/module_handler.o """
 
-makefile2 = """build/BaseDevMechanism.o build/BaseEnvironment.o
+makefile2 = """build/BaseOrganism.o build/BaseEnvironment.o
 	g++ -O3 -shared $^ -o $@
 
 build/module_handler.o: ./src/module_handler.cpp ./include/module_handler.h """
@@ -38,7 +38,7 @@ makefile4 = """-fpic -c $< -o $@
 
 """
 
-makefile5 = """build/BaseDevMechanism.o: ./src/BaseDevMechanism.cpp ./include/BaseDevMechanism.h ../include/config.h
+makefile5 = """build/BaseOrganism.o: ./src/BaseOrganism.cpp ./include/BaseOrganism.h ../include/config.h
 	g++ -O3 -std=c++0x  -I./include/ -I../include/ -fpic -c $< -o $@
 
 build/BaseEnvironment.o: ./src/BaseEnvironment.cpp ./include/BaseEnvironment.h ../include/config.h
@@ -57,7 +57,7 @@ moduleHandler1 = """using namespace std;
 #include <iostream>
 #include "module_handler.h"
 
-// Development modules
+// Organism modules
 """
 
 moduleHandler2 = """
@@ -65,23 +65,23 @@ moduleHandler2 = """
 """
 
 moduleHandler3 = """
-BaseDevMechanism* newOrganism(config &args, globalVars &global)
+BaseOrganism* newOrganism(config &args, globalVars &global)
 {
-  BaseDevMechanism *m;
+  BaseOrganism *m;
 
-  if (args.developmentMechanism=="BaseDevMechanism")
-    m = new BaseDevMechanism(args, global);
+  if (args.organismModuleName=="BaseOrganism")
+    m = new BaseOrganism(args, global);
 """
 
 moduleHandler4 = """  else                         
-    m = new BaseDevMechanism(args, global);
+    m = new BaseOrganism(args, global);
 
   return m;
 }
 
-void deleteOrganism(config &args, BaseDevMechanism* organismObject)
+void deleteOrganism(config &args, BaseOrganism* organismObject)
 {
-  if (args.developmentMechanism=="BaseDevMechanism")
+  if (args.organismModuleName=="BaseOrganism")
     delete organismObject;
 """
 
@@ -93,7 +93,7 @@ BaseEnvironment* newEnvironment(config &args)
 {
   BaseEnvironment *e;
 
-  if (args.environment=="BaseEnvironment")
+  if (args.environmentModuleName=="BaseEnvironment")
     e = new BaseEnvironment(args);
 """
 
@@ -105,7 +105,7 @@ moduleHandler6 = """  else
 
 void deleteEnvironment(config &args, BaseEnvironment* environmentObject)
 {
-  if (args.environment=="BaseEnvironment")
+  if (args.environmentModuleName=="BaseEnvironment")
     delete environmentObject;
 """
 
@@ -116,10 +116,10 @@ moduleHandler7 = """  else
 
 
 
-stateText = ["What to do?\n\n[1] - add a module\n[2] - remove a module\n[3] - generate files\n[4] - exit\n\n", "Add a module\n\n[1] - development module\n[2] - environment module\n[3] - back\n[4] - exit\n\n", "Remove a module\n\n[1] - development module\n[2] - environment module\n[3] - back\n[4] - exit\n\n", "Add a reproduction module\n\nEnter module name: ", "Add an environment module\n\nEnter module name: ", "Remove a reproduction module\n\n", "Remove an environment module\n\n"]
+stateText = ["What to do?\n\n[1] - add a module\n[2] - remove a module\n[3] - generate files\n[4] - exit\n\n", "Add a module\n\n[1] - organism module\n[2] - environment module\n[3] - back\n[4] - exit\n\n", "Remove a module\n\n[1] - organism module\n[2] - environment module\n[3] - back\n[4] - exit\n\n", "Add a reproduction module\n\nEnter module name: ", "Add an environment module\n\nEnter module name: ", "Remove a reproduction module\n\n", "Remove an environment module\n\n"]
 
 developmentModules = []
-with open('./development_modules/development_module_list', 'r') as developmentFile:
+with open('./organism_modules/organism_module_list', 'r') as developmentFile:
     developmentModules = [line.rstrip('\n') for line in developmentFile.readlines()]
 environmentModules = []
 with open('./environment_modules/environment_module_list', 'r') as environmentFile:
@@ -137,17 +137,17 @@ def recompile():
         makefileString += "build/" + module + ".o "
     makefileString += makefile2
     for module in developmentModules:
-        makefileString += "./development_modules/" + module + "/" + module + ".h "
+        makefileString += "./organism_modules/" + module + "/" + module + ".h "
     for module in environmentModules:
         makefileString += "./environment_modules/" + module + "/" + module + ".h "
     makefileString += makefile3
     for module in developmentModules:
-        makefileString += "-I./development_modules/" + module + " "
+        makefileString += "-I./organism_modules/" + module + " "
     for module in environmentModules:
         makefileString += "-I./environment_modules/" + module + " "
     makefileString += makefile4
     for module in developmentModules:
-        makefileString += "build/" + module + ".o: ./development_modules/" + module + "/" + module + ".cpp ./development_modules/" + module + "/" + module + ".h ./include/BaseDevMechanism.h"
+        makefileString += "build/" + module + ".o: ./organism_modules/" + module + "/" + module + ".cpp ./organism_modules/" + module + "/" + module + ".h ./include/BaseOrganism.h"
         makefileString += makefileLine
     for module in environmentModules:
         makefileString += "build/" + module + ".o: ./environment_modules/" + module + "/" + module + ".cpp ./environment_modules/" + module + "/" + module + ".h ./include/BaseEnvironment.h"
@@ -167,16 +167,16 @@ def recompile():
         moduleHandlerString += "#include \"" + module + ".h\"\n"
     moduleHandlerString += moduleHandler3
     for module in developmentModules:
-        moduleHandlerString += "  else if (args.developmentMechanism==\"" + module + "\")\n    m = new " + module + "(args, global);\n"
+        moduleHandlerString += "  else if (args.organismModuleName==\"" + module + "\")\n    m = new " + module + "(args, global);\n"
     moduleHandlerString += moduleHandler4
     for module in developmentModules:
-        moduleHandlerString += "  else if (args.developmentMechanism==\"" + module + "\")\n    delete ((" + module + "*)organismObject);\n"
+        moduleHandlerString += "  else if (args.organismModuleName==\"" + module + "\")\n    delete ((" + module + "*)organismObject);\n"
     moduleHandlerString += moduleHandler5
     for module in environmentModules:
-        moduleHandlerString += "  else if (args.environment==\"" + module + "\")\n    e = new " + module + "(args);\n"
+        moduleHandlerString += "  else if (args.environmentModuleName==\"" + module + "\")\n    e = new " + module + "(args);\n"
     moduleHandlerString += moduleHandler6
     for module in environmentModules:
-        moduleHandlerString += "  else if (args.environment==\"" + module + "\")\n    delete ((" + module + "*)environmentObject);\n"
+        moduleHandlerString += "  else if (args.environmentModuleName==\"" + module + "\")\n    delete ((" + module + "*)environmentObject);\n"
     moduleHandlerString += moduleHandler7
 
     with open('src/module_handler.cpp', 'w') as moduleHandlerFile:
@@ -184,7 +184,7 @@ def recompile():
     returnString += "Generated module_handler.cpp\n"
 
     # Rewrite development mechanism list file
-    with open('development_modules/development_module_list', 'w') as developmentFile:
+    with open('organism_modules/organism_module_list', 'w') as developmentFile:
         first = True
         for module in developmentModules:
             if first:
@@ -204,48 +204,49 @@ def recompile():
     # If the directory doesn't exist, create it.
     # If the .h and .cpp files don't exist, create them
     for module in developmentModules:
-        if not os.path.exists("development_modules/" + module):
-            os.makedirs("development_modules/" + module)
-        if not os.path.isfile("development_modules/" + module + "/" + module + ".h"):
-            with open("development_modules/" + module + "/" + module + ".h", 'w') as hFile:
+        if not os.path.exists("organism_modules/" + module):
+            os.makedirs("organism_modules/" + module)
+        if not os.path.isfile("organism_modules/" + module + "/" + module + ".h"):
+            with open("organism_modules/" + module + "/" + module + ".h", 'w') as hFile:
 
-                hFile.write("#include \"BaseDevMechanism.h\"\n\nclass ")
-                hFile.write(module + " : public BaseDevMechanism\n{\n public:\n  ")
+                hFile.write("#include \"BaseOrganism.h\"\n\nclass ")
+                hFile.write(module + " : public BaseOrganism\n{\n public:\n  ")
                 hFile.write(module + "(config&, globalVars&);\n  ~" + module + "();\n")
                 hString = """
   // Optional
-  //void mutateData(config&, vector<unsigned short>&);
+  //void mutateGenome(config&, vector<unsigned short>&);
 
  private:
-  void printDecoder(ofstream&);
-  void initializeOrphanDecoder(config&);
-  void initializeDecoding(config&);
-  void decode(config&);
+  void printDevelopmentProcess(ofstream&);
+  void initializeOrphanDevelopmentProcess(config&);
+  void initializeDevelopmentProcess(config&);
+  void updateDevelopment(config&);
 
   /* Mechanism-specific variables. Suggestions:
-     - Somewhere to store a working copy of the decoded data.
-     - Variable for initial size of orphan decoders.
-     - Variable for maximum size of decoded data.
+     - Data structures for the developmental process.
+     - Somewhere to store a working copy of the decoded genome.
+     - Variable for initial size of orphan developmentProcesss.
+     - Variable for maximum size of decoded genome.
    */
 
   // Optional
-  //void initializeOrphanData(config&);
-  //void printData(ofstream&);
+  //void initializeOrphanGenome(config&);
+  //void printGenome(ofstream&);
 };
 """
                 hFile.write(hString)
             
                 returnString += "Generated " + module + ".h\n"
 
-            with open("development_modules/" + module + "/" + module + ".cpp", 'w') as cppFile:
+            with open("organism_modules/" + module + "/" + module + ".cpp", 'w') as cppFile:
                 cppFile.write("using namespace std;\n#include <iostream>\n#include \"" + module + ".h\"\n\n")
                 now = datetime.datetime.now()
-                cppFile.write("/*\n\n  " + module + " development mechanism.\n  Created on " + str(now.day) + "/" + str(now.month) + "/" + str(now.year) + " by " +  getpass.getuser() + "\n\n */\n\n// Print the details of the particular decoder being used by this organism.\n")
-                cppFile.write("void " + module + "::printDecoder(ofstream &stream)\n{\n}\n\n// Create a new decoder for an orphan organism.\n")
-                cppFile.write("void " + module + "::initializeOrphanDecoder(config &args)\n{\n}\n\n// Called at the start of each reproduction cycle. Do any per-cycle\n// initialization.\n")
-                cppFile.write("void " + module + "::initializeDecoding(config &args)\n{\n}\n\n// Called iteratively. When decoding is complete, set the decoder and the\n// body specification of the next generation and set state to REPRODUCED.\n")
-                cppFile.write("void " + module + "::decode(config &args)\n{\n\n  //state = REPRODUCED;\n}\n\n// Initialize any mechanism-specific variables. Set variables from\n// command line/config file.\n")
-                cppFile.write(module + "::" + module + "(config &args) : BaseDevMechanism(args)\n{\n  // Setting variables from command line/config file\n  //if ( args.devArgs.count(\"example\") )\n  //  example = args.devArgs[\"example\"];\n}\n\n")
+                cppFile.write("/*\n\n  " + module + " development mechanism.\n  Created on " + str(now.day) + "/" + str(now.month) + "/" + str(now.year) + " by " +  getpass.getuser() + "\n\n */\n\n// Print the details of the particular developmentProcess being used by this organism.\n")
+                cppFile.write("void " + module + "::printDevelopmentProcess(ofstream &stream)\n{\n}\n\n// Create a new developmentProcess for an orphan organism.\n")
+                cppFile.write("void " + module + "::initializeOrphanDevelopmentProcess(config &args)\n{\n}\n\n// Called at the start of each reproduction cycle. Do any per-cycle\n// initialization.\n")
+                cppFile.write("void " + module + "::initializeDevelopmentProcess(config &args)\n{\n}\n\n// Called iteratively. When development is complete, set the developmentProcess and the\n// body specification of the next generation and set state to REPRODUCED.\n")
+                cppFile.write("void " + module + "::updateDevelopment(config &args)\n{\n\n  //state = REPRODUCED;\n}\n\n// Initialize any mechanism-specific variables. Set variables from\n// command line/config file.\n")
+                cppFile.write(module + "::" + module + "(config &args) : BaseOrganism(args)\n{\n  // Setting variables from command line/config file\n  //if ( args.organismArgs.count(\"example\") )\n  //  example = args.organismArgs[\"example\"];\n}\n\n")
                 cppFile.write(module + "::~" + module + "()\n{\n}\n")
                 returnString += "Generated " + module + ".cpp\n"
 
@@ -256,13 +257,13 @@ def recompile():
             with open("environment_modules/" + module + "/" + module + ".h", 'w') as hFile:
                 hFile.write("#include \"BaseEnvironment.h\"\n\nclass ")
                 hFile.write(module + " : public BaseEnvironment\n{\npublic:\n\n")
-                hFile.write("  void interpretBody(config&,globalVars&,int,int);\n  void updateFitnesses(config&,globalVars&);\n\n\n  " + module + "(config&);\n  ~" + module + "();\n\nprivate:\n\n};\n")
+                hFile.write("  void interpretBody(config&,globalVars&,int,int);\n  void updateMetabolisms(config&,globalVars&);\n\n\n  " + module + "(config&);\n  ~" + module + "();\n\nprivate:\n\n};\n")
                 returnString += "Generated " + module + ".h\n"
             with open("environment_modules/" + module + "/" + module + ".cpp", 'w') as cppFile:
                 cppFile.write("using namespace std;\n#include <iostream>\n\n")
-                cppFile.write("#include \"" + module + ".h\"\n\n// Given the coordinates of a new entity, create whatever we need to in order to evaluate its fitness immediately and/or in the future\n")
+                cppFile.write("#include \"" + module + ".h\"\n\n// Given the coordinates of a new entity, create whatever we need to in order to evaluate its metabolism immediately and/or in the future\n")
                 cppFile.write("void " + module + "::interpretBody(config &args, globalVars &global, int x, int y)\n{\n}\n\n")
-                cppFile.write("void " + module + "::updateFitnesses(config &args, globalVars &global)\n{\n}\n\n")
+                cppFile.write("void " + module + "::updateMetabolisms(config &args, globalVars &global)\n{\n}\n\n")
                 cppFile.write(module + "::" + module + "(config &args, globalVars &global) : BaseEnvironment(args, global)\n{\n}\n\n" + module + "::~" + module + "()\n{\n}\n")
                 returnString += "Generated " + module + ".cpp\n"
 

@@ -1,4 +1,4 @@
-#include "BaseDevMechanism.h"
+#include "BaseOrganism.h"
 #include <map>
 
 class triple {
@@ -23,24 +23,24 @@ public:
 #define UNLOOPY   1
 #define GA        2
 
-class DevL1 : public BaseDevMechanism
+class OrgL1 : public BaseOrganism
 {
 public:
 
-  void printDecoder(ofstream &stream);
+  void printDevelopmentProcess(ofstream &stream);
 
-  DevL1(config &args, globalVars &global);
-  ~DevL1();
+  OrgL1(config &args, globalVars &global);
+  ~OrgL1();
 
  private:
 
   unsigned short type;
 
   unsigned int initProductionRuleSize;
-  unsigned int maxWorkingDataSize;
+  unsigned int maxWorkingGenomeSize;
 
-  unsigned short workingDataFrame;
-  vector<vector<unsigned short> > workingData;
+  unsigned short workingGenomeFrame;
+  vector<vector<unsigned short> > workingGenome;
 
   vector<unsigned short> productionRuleSpecification; // for use by the non-loopy only
   map<triple, vector<unsigned short> > productionRules;
@@ -49,11 +49,11 @@ public:
 
   bool changedOnLastPass;
 
-  void initializeOrphanDecoder(config&);
-  void initializeDecoding(config&);
+  void initializeOrphanDevelopmentProcess(config&);
+  void initializeDevelopmentProcess(config&);
 
   void buildProductionRules(config&, vector<unsigned short>::iterator, vector<unsigned short>::iterator, map<triple, vector<unsigned short> >&);
   void interpret(config&, vector<unsigned short>);
-  void decode(config&);
+  void updateDevelopment(config&);
 
 };

@@ -1,4 +1,4 @@
-#include "BaseDevMechanism.h"
+#include "BaseOrganism.h"
 #include "config.h"
 #include <vector>
 
@@ -13,7 +13,7 @@ public:
   int functionEvaluations;
 
   virtual void interpretBody(config&,globalVars&,int,int);
-  virtual void updateFitnesses(config&,globalVars&);
+  virtual void updateMetabolisms(config&,globalVars&);
 
   BaseEnvironment(config&);
   ~BaseEnvironment();

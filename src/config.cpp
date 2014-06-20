@@ -5,8 +5,6 @@
 #include <cstdio>
 #include <getopt.h>
 #include <cstdlib>
-#include <sys/types.h>
-#include <unistd.h>
 
 using namespace std;
 
@@ -23,18 +21,18 @@ using namespace std;
 void setResultsDir(config &args)
 {
   ostringstream dirStream;
-  dirStream << "dev/" << args.developmentMechanism << "/";
+  dirStream << "dev/" << args.organismModuleName << "/";
   
-  for (map<string, string>::iterator devOpt = args.devArgs.begin(); devOpt != args.devArgs.end(); ++devOpt)
+  for (map<string, string>::iterator devOpt = args.organismArgs.begin(); devOpt != args.organismArgs.end(); ++devOpt)
   {
     dirStream << "m-" << devOpt->first << "/";
     if (devOpt->second!="") // not flag type option, has value
       dirStream << devOpt->second << "/";
   }
 
-  dirStream << "env/" << args.environment << "/";
+  dirStream << "env/" << args.environmentModuleName << "/";
 
-  for (map<string, string>::iterator environOpt = args.envArgs.begin(); environOpt != args.envArgs.end(); ++environOpt)
+  for (map<string, string>::iterator environOpt = args.environmentArgs.begin(); environOpt != args.environmentArgs.end(); ++environOpt)
   {
     dirStream << "e-" << environOpt->first << "/";
     if (environOpt->second!="")
@@ -44,10 +42,11 @@ void setResultsDir(config &args)
   dirStream << "size/" << args.width << "x" << args.height << "/";
   dirStream << "spawnRate/" << args.spawnRate << "/";
 
-  dirStream << "run/" << getpid() << "-" << args.seed << "/";
-  args.pid = getpid();
+  dirStream << "run/" << args.pid << "-" << args.seed << "/";
 
   args.resultsDir = dirStream.str();
+
+  args.dbString = args.resultsBaseDir + args.resultsDir + "population.db";
 }
 
 // Print the program options, in the same format as the config file
@@ -58,25 +57,23 @@ ostream& operator << (ostream& o, config a)
   if (a.seed==-1)
     o << "# seed = time(NULL)" << endl;
   o << "seed = " << a.seed << endl;
-  if (a.display)
-    o << "display" << endl;
   if (a.debug)
     o << "debug" << endl;
-  o << "developmentMechanism = " << a.developmentMechanism << endl;
-  o << "environment = " << a.environment << endl;
+  o << "recordLevel = " << a.recordLevel << endl;
+  o << "organismModuleName = " << a.organismModuleName << endl;
+  o << "environmentModuleName = " << a.environmentModuleName << endl;
   o << "size = " << a.width << "x" << a.height << endl;
   o << "time = " << a.totalFunctionEvaluations << endl;
   o << "spawnRate = " << a.spawnRate << endl;
-  o << "averagingWindowLength = " << a.averagingWindowLength << endl;
-  for (map<string, string>::iterator devOpt = a.devArgs.begin(); devOpt != a.devArgs.end(); ++devOpt)
+  for (map<string, string>::iterator devOpt = a.organismArgs.begin(); devOpt != a.organismArgs.end(); ++devOpt)
   {
-    o << "dev-" << devOpt->first << " = ";
+    o << "org-" << devOpt->first << " = ";
     if (devOpt->second=="") // flag type option
       o << "true" << endl;
     else
     o << devOpt->second << endl;
   }
-  for (map<string, string>::iterator environOpt = a.envArgs.begin(); environOpt != a.envArgs.end(); ++environOpt)
+  for (map<string, string>::iterator environOpt = a.environmentArgs.begin(); environOpt != a.environmentArgs.end(); ++environOpt)
   {
     o << "env-" << environOpt->first << " = ";
     if (environOpt->second=="") // flag type option
@@ -84,6 +81,7 @@ ostream& operator << (ostream& o, config a)
     else
     o << environOpt->second << endl;
   }
+
   return o;
 }
 
@@ -103,17 +101,16 @@ int parseArguments(int argc, char **argv, config &args)
 {
   // Default options
   args.resultsBaseDir = "./results/default/";
-  args.resultsDir = "default/";
-  args.seed    = -1;
-  args.display = false;
-  args.debug   = false;
-  args.width   = 20;
-  args.height  = 20;
-  args.spawnRate = 10;
-  args.averagingWindowLength = 100000;
+  args.resultsDir     = "default/";
+  args.seed           = -1;
+  args.recordLevel    = 0;
+  args.debug          = false;
+  args.width          = 20;
+  args.height         = 20;
+  args.spawnRate      = 10;
   args.totalFunctionEvaluations = 100;
-  args.developmentMechanism = "BaseDevMechanism";
-  args.environment = "BaseEnvironment";
+  args.organismModuleName       = "BaseOrganism";
+  args.environmentModuleName    = "BaseEnvironment";
 
   // Set options from config file
   int c;
@@ -140,8 +137,6 @@ int parseArguments(int argc, char **argv, config &args)
 	  {
 	    if (line == "debug")
 	      args.debug = 1;
-	    else if (line == "display")
-	      args.display = 1;
 	    else
 	    {
 	      int loc = line.find('=');
@@ -149,10 +144,12 @@ int parseArguments(int argc, char **argv, config &args)
 	      string value = line.substr(loc+2,string::npos);
 	      if (key == "seed")
 		args.seed = atoi(value.c_str());
-	      else if (key == "developmentMechanism")
-		args.developmentMechanism = value;
-	      else if (key == "environment")
-		args.environment = value;
+	      else if (key == "recordLevel")
+		args.recordLevel = atoi(value.c_str());
+	      else if (key == "organismModuleName")
+		args.organismModuleName = value;
+	      else if (key == "environmentModuleName")
+		args.environmentModuleName = value;
 	      else if (key == "size")
 	      {
 		size_t delimPos = value.find("x");
@@ -168,23 +165,21 @@ int parseArguments(int argc, char **argv, config &args)
 	      }
 	      else if (key == "spawnRate")
 		args.spawnRate = atoi(value.c_str());
-	      else if (key == "averagingWindowLength")
-		args.averagingWindowLength = atoi(value.c_str());
 	      else if (key == "time")
 		args.totalFunctionEvaluations = atoi(value.c_str());
-	      else if (key.substr(0,4) == "dev-")
+	      else if (key.substr(0,4) == "org-")
 	      {
 		if (value == "true")
-		  args.devArgs[key.substr(4, string::npos)] = "";
+		  args.organismArgs[key.substr(4, string::npos)] = "";
 		else
-		  args.devArgs[key.substr(4, string::npos)] = value;
+		  args.organismArgs[key.substr(4, string::npos)] = value;
 	      }
 	      else if (key.substr(0,4) == "env-")
 	      {
 		if (value == "true")
-		  args.envArgs[key.substr(4, string::npos)] = "";
+		  args.environmentArgs[key.substr(4, string::npos)] = "";
 		else
-		  args.envArgs[key.substr(4, string::npos)] = value;
+		  args.environmentArgs[key.substr(4, string::npos)] = value;
 	      }
 	      
 	    }
@@ -200,13 +195,12 @@ int parseArguments(int argc, char **argv, config &args)
     {"help", 0, 0, 0},
     {"dir", 1, 0, 0},
     {"seed", 1, 0, 0},
-    {"display", 0, &args.display, 1},
+    {"recordLevel", 1, 0, 0},
     {"debug", 0, &args.debug, 1},
-    {"developmentMechanism", 1, 0, 0},
+    {"organismModuleName", 1, 0, 0},
     {"environment", 1, 0, 0},
     {"size", 1, 0, 0},
     {"spawnRate", 1, 0, 0},
-    {"averagingWindowLength", 1, 0, 0},
     {"time", 1, 0, 0},
     {NULL, 0, NULL, 0}
   };
@@ -231,10 +225,12 @@ int parseArguments(int argc, char **argv, config &args)
       }
       else if (long_options2[option_index].name == "seed")
 	args.seed = atoi(optarg);
-      else if (long_options2[option_index].name == "developmentMechanism")
-        args.developmentMechanism = string(optarg);
+      else if (long_options2[option_index].name == "recordLevel")
+	args.recordLevel = atoi(optarg);
+      else if (long_options2[option_index].name == "organismModuleName")
+        args.organismModuleName = string(optarg);
       else if (long_options2[option_index].name == "environment")
-        args.environment = string(optarg);
+        args.environmentModuleName = string(optarg);
       else if (long_options2[option_index].name == "size")
       {
 	string sizeString = string(optarg);
@@ -251,8 +247,6 @@ int parseArguments(int argc, char **argv, config &args)
       }
       else if (long_options2[option_index].name == "spawnRate")
 	args.spawnRate = atoi(optarg);
-      else if (long_options2[option_index].name == "averagingWindowLength")
-	args.averagingWindowLength = atoi(optarg);
       else if (long_options2[option_index].name == "time")
 	args.totalFunctionEvaluations = atoi(optarg);
 
@@ -264,10 +258,10 @@ int parseArguments(int argc, char **argv, config &args)
     case '?':
       map<string,string> *dict;
       string key = string(argv[optind-1]).substr(2, string::npos);
-      if (key.substr(0,4) == "dev-")
-	dict = &args.devArgs;
+      if (key.substr(0,4) == "org-")
+	dict = &args.organismArgs;
       else if (key.substr(0,4) == "env-")
-	dict = &args.envArgs;
+	dict = &args.environmentArgs;
       else
 	break;
       int  loc = key.find('=');
@@ -282,6 +276,11 @@ int parseArguments(int argc, char **argv, config &args)
       break;
     }
   }
+
+  if (args.recordLevel < 0)
+    args.recordLevel = 0;
+  else if (args.recordLevel > 2)
+    args.recordLevel = 2;
 
   cout << args << endl;
 

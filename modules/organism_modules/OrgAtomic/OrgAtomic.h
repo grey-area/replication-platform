@@ -1,12 +1,12 @@
-#include "BaseDevMechanism.h"
+#include "BaseOrganism.h"
 #include <map>
 
-class DevAtomic : public BaseDevMechanism
+class OrgAtomic : public BaseOrganism
 {
 public:
 
-  DevAtomic(config &args, globalVars &global);
-  ~DevAtomic();
+  OrgAtomic(config &args, globalVars &global);
+  ~OrgAtomic();
 
  private:
 
@@ -25,9 +25,9 @@ public:
   
   void execute(unsigned int);
 
-  void printDecoder();
-  void initializeOrphanDecoder(config&);
-  void initializeDecoding(config&);
-  void decode(config&);
+  void printDevelopmentProcess();
+  void initializeOrphanDevelopmentProcess(config&);
+  void initializeDevelopmentProcess(config&);
+  void updateDevelopment(config&);
 
 };

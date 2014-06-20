@@ -1,9 +1,9 @@
-#include "BaseDevMechanism.h"
+#include "BaseOrganism.h"
 #include "BaseEnvironment.h"
 #include <string>
 #include "config.h"
 
-BaseDevMechanism* newOrganism(config&, globalVars&);
-void deleteOrganism(config&, BaseDevMechanism*);
+BaseOrganism* newOrganism(config&, globalVars&);
+void deleteOrganism(config&, BaseOrganism*);
 BaseEnvironment* newEnvironment(config&);
 void deleteEnvironment(config&, BaseEnvironment*);

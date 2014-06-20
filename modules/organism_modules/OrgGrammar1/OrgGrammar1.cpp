@@ -1,10 +1,10 @@
 using namespace std;
 #include <iostream>
 #include <algorithm>
-#include "DevGrammar1.h"
+#include "OrgGrammar1.h"
 
 
-void DevGrammar1::printDecoder(ofstream &stream)
+void OrgGrammar1::printDevelopmentProcess(ofstream &stream)
 {
   int rule = 0;
   stream << "Rewrite rules:" << endl;
@@ -18,8 +18,8 @@ void DevGrammar1::printDecoder(ofstream &stream)
 }
 
 
-// Create a new decoder, for an `orphan' cell
-void DevGrammar1::initializeOrphanDecoder(config &args)
+// Create a new developmentProcess, for an `orphan' cell
+void OrgGrammar1::initializeOrphanDevelopmentProcess(config &args)
 {
   // Start with everything rewriting to nothing
   rules.resize(ruleAlphabet);
@@ -27,42 +27,42 @@ void DevGrammar1::initializeOrphanDecoder(config &args)
 
 
 // Done at the start of each reproduction cycle
-void DevGrammar1::initializeDecoding(config &args)
+void OrgGrammar1::initializeDevelopmentProcess(config &args)
 {
-  DevGrammar1 *c = ((DevGrammar1*)child);
+  OrgGrammar1 *c = ((OrgGrammar1*)child);
 
-  // Copy child's data to decoded data
-  copy(child->data.begin(), child->data.end(), back_inserter(c->decodedData));
+  // Copy child's genome to decoded genome
+  copy(child->genome.begin(), child->genome.end(), back_inserter(c->decodedGenome));
 
-  prevIt = c->decodedData.begin();
+  prevIt = c->decodedGenome.begin();
   prevChanged = false;
 }
 
 
-// When we've finished decoding the data, we've have a list `decodedData'
-// Interpret that data as the specification of a list of rewrite rules.
-// Give that list of rewrite rules to the child. Give it the data after
+// When we've finished development the genome, we've have a list `decodedGenome'
+// Interpret that genome as the specification of a list of rewrite rules.
+// Give that list of rewrite rules to the child. Give it the genome after
 // the specification of the rule table as its `body specification'
-void DevGrammar1::interpret(config &args, DevGrammar1 *c)
+void OrgGrammar1::interpret(config &args, OrgGrammar1 *c)
 {
   // TODO what to print when debugging?
   if (args.debug)
   {
-    cout << "Decoding complete" << endl;
-    if (decodedData==c->decodedData)
-      cout << "Parent and child have same decoding function" << endl;
+    cout << "Development complete" << endl;
+    if (decodedGenome==c->decodedGenome)
+      cout << "Parent and child have same development function" << endl;
     cout << endl;
   }
 
   c->rules.resize(ruleAlphabet);
-  list<unsigned short>::iterator bodyStart = c->decodedData.end();
+  list<unsigned short>::iterator bodyStart = c->decodedGenome.end();
 
   vector<unsigned short> ruleStack;
-  for (list<unsigned short>::iterator s = c->decodedData.begin() ; s != c->decodedData.end(); ++s)
+  for (list<unsigned short>::iterator s = c->decodedGenome.begin() ; s != c->decodedGenome.end(); ++s)
   {
     if (*s >= ruleAlphabet and *s < ruleAlphabet*2) // A' type symbol
     {
-      bodyStart = c->decodedData.end();
+      bodyStart = c->decodedGenome.end();
       unsigned short rewriteS = *s - (unsigned short)ruleAlphabet;
       // If we're not inside a rule for this symbol already
       if (find(ruleStack.begin(), ruleStack.end(), rewriteS) == ruleStack.end())
@@ -92,35 +92,35 @@ void DevGrammar1::interpret(config &args, DevGrammar1 *c)
     } // End of a type symbol
   } // End of interpretation loop
 
-  // Copy the remainder of the decodedData to the child body
-  //copy(bodyStart, c->decodedData.end(), back_inserter(c->bodySpecification));
-  for(list<unsigned short>::iterator it=bodyStart; it!=c->decodedData.end(); ++it)
+  // Copy the remainder of the decodedGenome to the child body
+  //copy(bodyStart, c->decodedGenome.end(), back_inserter(c->somaSpecification));
+  for(list<unsigned short>::iterator it=bodyStart; it!=c->decodedGenome.end(); ++it)
   {
     if (*it > ruleAlphabet*2)
-      c->bodySpecification.push_back(*it);
+      c->somaSpecification.push_back(*it);
   }
 
 }
 
 
-// Iteratively apply the rewrite rules (decoder) to the data
-void DevGrammar1::decode(config &args)
+// Iteratively apply the rewrite rules (developmentProcess) to the genome
+void OrgGrammar1::updateDevelopment(config &args)
 {
-  DevGrammar1 *c = (DevGrammar1*)child;
+  OrgGrammar1 *c = (OrgGrammar1*)child;
 
   bool changed = false;
 
-  if (prevIt == c->decodedData.end())
+  if (prevIt == c->decodedGenome.end())
   {
-    prevIt = c->decodedData.begin();
+    prevIt = c->decodedGenome.begin();
     prevChanged = false;
   }
 
-  // Read 10 symbols of the decoded data, starting where we ended last time
+  // Read 10 symbols of the decoded genome, starting where we ended last time
   // If we see any "A" type symbols, apply the relevant rewrite rule
   list<unsigned short>::iterator it;
   int count = 0;
-  for (it = prevIt ; it != c->decodedData.end(); ++it,++count)
+  for (it = prevIt ; it != c->decodedGenome.end(); ++it,++count)
   {
     if(count>10)
     {
@@ -136,9 +136,9 @@ void DevGrammar1::decode(config &args)
       vector<unsigned short>  *rule = &(rules.at(*it));
       // Insert what we're rewriting to
       if (rule->size() > 0) 
-	c->decodedData.insert(it, rule->begin(), rule->end());
+	c->decodedGenome.insert(it, rule->begin(), rule->end());
       // Delete the symbol
-      it = prev(c->decodedData.erase(it));
+      it = prev(c->decodedGenome.erase(it));
     }
   }
 
@@ -148,18 +148,18 @@ void DevGrammar1::decode(config &args)
   // TODO what to print when debugging?
   if (args.debug)
   {
-    cout << endl << "Decoding step" << endl;
+    cout << endl << "Development step" << endl;
     cout << "\tid: " << id << "  child id: " << child->id << endl;
-    for (list<unsigned short>::iterator it = c->decodedData.begin() ; it != c->decodedData.end(); ++it)
+    for (list<unsigned short>::iterator it = c->decodedGenome.begin() ; it != c->decodedGenome.end(); ++it)
       cout << *it << ".";
     cout << endl << endl;
   }
 
-  // If no changes occured on the latest full pass through the decoded data,
-  // interpret decodedData as the specification of a list of rewrite rules.
-  // The part of the data after the specification of the rewrite rules is the
+  // If no changes occured on the latest full pass through the decoded genome,
+  // interpret decodedGenome as the specification of a list of rewrite rules.
+  // The part of the genome after the specification of the rewrite rules is the
   // `body specification'. Give the new rewrite rules and body spec to the child
-  // and go to state reproduced, passing control back to the BaseDevMechanism
+  // and go to state reproduced, passing control back to the BaseOrganism
   if (not changed and not prevChanged)
   {
     interpret(args, c);
@@ -168,11 +168,11 @@ void DevGrammar1::decode(config &args)
 }
 
 
-DevGrammar1::DevGrammar1(config &args) : BaseDevMechanism(args)
+OrgGrammar1::OrgGrammar1(config &args) : BaseOrganism(args)
 {
   ruleAlphabet = alphabetSize/3;
 }
 
-DevGrammar1::~DevGrammar1()
+OrgGrammar1::~OrgGrammar1()
 {
 }

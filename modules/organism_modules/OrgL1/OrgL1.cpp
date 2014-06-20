@@ -1,7 +1,7 @@
 using namespace std;
 #include <iostream>
 #include <algorithm>
-#include "DevL1.h"
+#include "OrgL1.h"
 
 /*
   Development mechanism based on context-sensitive L-systems.
@@ -12,11 +12,11 @@ using namespace std;
 
   Flags:
   - noisy-development
-  - half-decoder
+  - half-development-process
 
  */
 
-void DevL1::printDecoder(ofstream &stream)
+void OrgL1::printDevelopmentProcess(ofstream &stream)
 {
     stream << "Production rules:" << endl;
     for(map<triple, vector<unsigned short> >::iterator it = productionRules.begin(); it != productionRules.end(); ++it)
@@ -28,12 +28,12 @@ void DevL1::printDecoder(ofstream &stream)
     }
 }
 
-// Create a new decoder, for an `orphan' cell
-void DevL1::initializeOrphanDecoder(config &args)
+// Create a new developmentProcess, for an `orphan' cell
+void OrgL1::initializeOrphanDevelopmentProcess(config &args)
 {
   productionRules.clear();
 
-  if (not (args.devArgs.count("type") and args.devArgs["type"] == "ga"))
+  if (not (args.organismArgs.count("type") and args.organismArgs["type"] == "ga"))
   {
     unsigned int s = rand()%(initProductionRuleSize-10) + 10;
     for(int i=0; i<s; ++i)
@@ -45,37 +45,37 @@ void DevL1::initializeOrphanDecoder(config &args)
 
 
 // Done at the start of each reproduction cycle
-void DevL1::initializeDecoding(config &args)
+void OrgL1::initializeDevelopmentProcess(config &args)
 {
-  DevL1 *c = ((DevL1*)child);
+  OrgL1 *c = ((OrgL1*)child);
 
-  workingData.at(0).clear();
-  workingData.at(1).clear();
+  workingGenome.at(0).clear();
+  workingGenome.at(1).clear();
 
-  // Copy child's data to my working data
+  // Copy child's genome to my working genome
   // If this flag is set, introduce non-heritable variation at the start of development
-  workingData.at(workingDataFrame) = child->copyData(args);
-  if (args.devArgs.count("noisy-development"))
-    mutateData(args, workingData.at(workingDataFrame));
+  workingGenome.at(workingGenomeFrame) = child->copyGenome(args);
+  if (args.organismArgs.count("noisy-development"))
+    mutateGenome(args, workingGenome.at(workingGenomeFrame));
 
 }
 
 
-void DevL1::buildProductionRules(config &args, vector<unsigned short>::iterator it, vector<unsigned short>::iterator decoderEnd, map<triple, vector<unsigned short> > &target)
+void OrgL1::buildProductionRules(config &args, vector<unsigned short>::iterator it, vector<unsigned short>::iterator developmentProcessEnd, map<triple, vector<unsigned short> > &target)
 {
-  vector<unsigned short>::iterator decoderStart = it;
+  vector<unsigned short>::iterator developmentProcessStart = it;
   // Build child's production rules from the stuff before the punctuation mark
-  while (decoderEnd-it >= 3) // While there are enough symbols left to make the LHS of a production rule
+  while (developmentProcessEnd-it >= 3) // While there are enough symbols left to make the LHS of a production rule
   {
     triple LHS = {*it, *(it+1), *(it+2)};
     it += 3;
-    vector<unsigned short>::iterator ruleEnd = decoderEnd;
+    vector<unsigned short>::iterator ruleEnd = developmentProcessEnd;
     unsigned int punctuationSize = 0;
     // todo search for earliest instance of any punctuation mark, instead of the earliest instance of the first one we check
     for (vector<vector<unsigned short> >::iterator p = rulePunctuationMarks.begin(); p != rulePunctuationMarks.end(); ++p)
     {
-      vector<unsigned short>::iterator ruleEnd2 = search(it, decoderEnd, p->begin(), p->end());
-      if (ruleEnd2 - decoderStart < ruleEnd - decoderStart)
+      vector<unsigned short>::iterator ruleEnd2 = search(it, developmentProcessEnd, p->begin(), p->end());
+      if (ruleEnd2 - developmentProcessStart < ruleEnd - developmentProcessStart)
       {
 	ruleEnd = ruleEnd2;
 	punctuationSize = p->end() - p->begin();
@@ -97,13 +97,13 @@ void DevL1::buildProductionRules(config &args, vector<unsigned short>::iterator 
 }
 
 
-// 1. Split the unpacked data into two parts, one of which specifies the production rules of the next generation, and the other of which specifies whatever else the environment requires
+// 1. Split the unpacked genome into two parts, one of which specifies the production rules of the next generation, and the other of which specifies whatever else the environment requires
 // 2. Build rules from the first part
-void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
+void OrgL1::interpret(config &args, vector<unsigned short> unpackedGenome)
 {
-  DevL1 *c = (DevL1*)child; 
+  OrgL1 *c = (OrgL1*)child; 
 
-  vector<unsigned short>::iterator decoderEnd = unpackedData.end();
+  vector<unsigned short>::iterator developmentProcessEnd = unpackedGenome.end();
   unsigned int punctuationSize = 0;
   // If loopy mechanism, split the result into a specification of production rules and specification of the body
   if (type == LOOPY)
@@ -114,26 +114,26 @@ void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
     for (vector<vector<unsigned short> >::iterator p = partPunctuationMarks.begin(); p != partPunctuationMarks.end(); ++p)
     {
       vector<unsigned short>::iterator searchBegin;
-      // If this flag is set, at least half of the unpacked data specifies a decoder, so we only look for the punctuation mark in the second half
-      if (args.devArgs.count("half-decoder"))
-	searchBegin = unpackedData.begin() + unpackedData.size()/2;
+      // If this flag is set, at least half of the unpacked genome specifies a developmentProcess, so we only look for the punctuation mark in the second half
+      if (args.organismArgs.count("half-development-process"))
+	searchBegin = unpackedGenome.begin() + unpackedGenome.size()/2;
       else
-	searchBegin = unpackedData.begin();
-      decoderEnd = search(searchBegin, unpackedData.end(), p->begin(), p->end());
-      if (decoderEnd != unpackedData.end())
+	searchBegin = unpackedGenome.begin();
+      developmentProcessEnd = search(searchBegin, unpackedGenome.end(), p->begin(), p->end());
+      if (developmentProcessEnd != unpackedGenome.end())
 	punctuationSize = p->size();
     }
   }
-  else // If unloopy mechanism, the whole unpacked data specifies the body
-    decoderEnd = unpackedData.begin();
+  else // If unloopy mechanism, the whole unpacked genome specifies the body
+    developmentProcessEnd = unpackedGenome.begin();
 
   // Copy the stuff after the punctuation mark to the child's body specification
-  c->bodySpecification.clear();
-  copy(decoderEnd+punctuationSize, unpackedData.end(), back_inserter(c->bodySpecification));
+  c->somaSpecification.clear();
+  copy(developmentProcessEnd+punctuationSize, unpackedGenome.end(), back_inserter(c->somaSpecification));
   
   // If loopy, build the production rules using the stuff before the punctuation mark
   if (type == LOOPY)
-    buildProductionRules(args, unpackedData.begin(), decoderEnd, c->productionRules);
+    buildProductionRules(args, unpackedGenome.begin(), developmentProcessEnd, c->productionRules);
   else if (type == UNLOOPY) // else copy our production rules specification to the child, mutated
   {
     copy(productionRuleSpecification.begin(), productionRuleSpecification.end(), back_inserter(c->productionRuleSpecification));
@@ -158,19 +158,19 @@ void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
 
 
   // Debugging
-  if(args.devArgs.count("debug"))
+  if(args.organismArgs.count("debug"))
   {
-    cout << "Final working data:" << endl;
-    for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
+    cout << "Final working genome:" << endl;
+    for(vector<unsigned short>::iterator it=workingGenome.at(workingGenomeFrame).begin(); it!=workingGenome.at(workingGenomeFrame).end(); ++it)
       cout << *it << " ";
     cout << endl << endl;
 
     cout << id << " produced child " << c->id << endl;
   
-    if (c->bodySpecification.size() > 0)
+    if (c->somaSpecification.size() > 0)
     {
       cout << "Child's body specification:" << endl;
-      for(vector<unsigned short>::iterator it=c->bodySpecification.begin(); it!=c->bodySpecification.end(); ++it)
+      for(vector<unsigned short>::iterator it=c->somaSpecification.begin(); it!=c->somaSpecification.end(); ++it)
 	cout << *it << " ";
       cout << endl;
     }
@@ -178,7 +178,7 @@ void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
     cout << "Child's production rule specification:" << endl;
     if (type == LOOPY)
     {
-      for(vector<unsigned short>::iterator it=unpackedData.begin(); it!=decoderEnd; ++it)
+      for(vector<unsigned short>::iterator it=unpackedGenome.begin(); it!=developmentProcessEnd; ++it)
 	cout << *it << " ";
     }
     else
@@ -202,20 +202,20 @@ void DevL1::interpret(config &args, vector<unsigned short> unpackedData)
 
 
 
-// Iteratively apply the rewrite rules (decoder) to the data
-void DevL1::decode(config &args)
+// Iteratively apply the rewrite rules (developmentProcess) to the genome
+void OrgL1::updateDevelopment(config &args)
 {
-  DevL1 *c = (DevL1*)child;
+  OrgL1 *c = (OrgL1*)child;
 
   // Debugging
-  if(args.devArgs.count("debug"))
+  if(args.organismArgs.count("debug"))
   {
     cout << "I am " << id << " producing child " << c->id << endl;
-    cout << "Data:" << endl;
-    for(vector<unsigned short>::iterator it=data.begin(); it!=data.end(); ++it)
+    cout << "Genome:" << endl;
+    for(vector<unsigned short>::iterator it=genome.begin(); it!=genome.end(); ++it)
       cout << *it << " ";
-    cout << endl << "Child's data:" << endl;
-    for(vector<unsigned short>::iterator it=c->data.begin(); it!=c->data.end(); ++it)
+    cout << endl << "Child's genome:" << endl;
+    for(vector<unsigned short>::iterator it=c->genome.begin(); it!=c->genome.end(); ++it)
       cout << *it << " ";
     cout << endl << "Production rule specification:" << endl;
     for(vector<unsigned short>::iterator it = productionRuleSpecification.begin(); it != productionRuleSpecification.end(); ++it)
@@ -228,33 +228,33 @@ void DevL1::decode(config &args)
 	cout << *it2 << " ";
       cout << endl;
     }
-    cout << "Working data:" << endl;
-    for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
+    cout << "Working genome:" << endl;
+    for(vector<unsigned short>::iterator it=workingGenome.at(workingGenomeFrame).begin(); it!=workingGenome.at(workingGenomeFrame).end(); ++it)
       cout << *it << " ";
     cout << endl << endl;
   } // End of debugging
 
   changedOnLastPass = false;
-  workingData.at(1-workingDataFrame).clear();
+  workingGenome.at(1-workingGenomeFrame).clear();
 
-  for (vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
+  for (vector<unsigned short>::iterator it=workingGenome.at(workingGenomeFrame).begin(); it!=workingGenome.at(workingGenomeFrame).end(); ++it)
   {
 
-    // if we're over the working data limit, stop unpacking
-    if (workingData.at(1-workingDataFrame).size() > maxWorkingDataSize)
+    // if we're over the working genome limit, stop unpacking
+    if (workingGenome.at(1-workingGenomeFrame).size() > maxWorkingGenomeSize)
     {
-      workingData.at(1-workingDataFrame).erase(workingData.at(1-workingDataFrame).begin()+maxWorkingDataSize, workingData.at(1-workingDataFrame).end());
+      workingGenome.at(1-workingGenomeFrame).erase(workingGenome.at(1-workingGenomeFrame).begin()+maxWorkingGenomeSize, workingGenome.at(1-workingGenomeFrame).end());
       changedOnLastPass = false;
       break;
     }
 
     // if there isn't a matching production rule, just copy the symbol
-    // otherwise, copy the matched data
+    // otherwise, copy the matched genome
 
     // If the symbol doesn't have a left or right neighbour
-    if (it-workingData.at(workingDataFrame).begin() == 0 or workingData.at(workingDataFrame).end()-it == 1)
+    if (it-workingGenome.at(workingGenomeFrame).begin() == 0 or workingGenome.at(workingGenomeFrame).end()-it == 1)
     {
-      workingData.at(1-workingDataFrame).push_back(*it);
+      workingGenome.at(1-workingGenomeFrame).push_back(*it);
     }
     else
     {
@@ -262,7 +262,7 @@ void DevL1::decode(config &args)
       map<triple, vector<unsigned short> >::iterator productionRule = productionRules.end();
 
       // Treat a '3' on the left or right as a wildcard symbol
-      if (args.devArgs.count("wildcard"))
+      if (args.organismArgs.count("wildcard"))
       {
 	if (t.x == 3)
 	{
@@ -294,16 +294,16 @@ void DevL1::decode(config &args)
       // if there is no such production rule
       if (productionRule == productionRules.end())
       {
-	workingData.at(1-workingDataFrame).push_back(*it);
+	workingGenome.at(1-workingGenomeFrame).push_back(*it);
       }
       else
       {
 	changedOnLastPass = true;
 	// Insert from the production rule
-	copy(productionRule->second.begin(), productionRule->second.end(), back_inserter(workingData.at(1-workingDataFrame)));	
+	copy(productionRule->second.begin(), productionRule->second.end(), back_inserter(workingGenome.at(1-workingGenomeFrame)));	
 
 	// Debugging
-	if(args.devArgs.count("debug"))
+	if(args.organismArgs.count("debug"))
 	{
 	cout << "Replacing " << *it << " with ";
 	for(vector<unsigned short>::iterator it2=productionRule->second.begin(); it2!=productionRule->second.end(); ++it2)
@@ -315,43 +315,43 @@ void DevL1::decode(config &args)
   }
 
   // Switch the frames
-  workingDataFrame = 1-workingDataFrame;
+  workingGenomeFrame = 1-workingGenomeFrame;
 
-  if(args.devArgs.count("debug"))
+  if(args.organismArgs.count("debug"))
   {
-    cout << "Working data after one pass:" << endl;
-    for(vector<unsigned short>::iterator it=workingData.at(workingDataFrame).begin(); it!=workingData.at(workingDataFrame).end(); ++it)
+    cout << "Working genome after one pass:" << endl;
+    for(vector<unsigned short>::iterator it=workingGenome.at(workingGenomeFrame).begin(); it!=workingGenome.at(workingGenomeFrame).end(); ++it)
       cout << *it << " ";
     cout << endl << endl;
   }
 
   if (not changedOnLastPass) 
   {
-    interpret(args, workingData.at(workingDataFrame));
+    interpret(args, workingGenome.at(workingGenomeFrame));
     state=REPRODUCED;
   }
 
 }
 
-DevL1::DevL1(config &args, globalVars &global) : BaseDevMechanism(args, global)
+OrgL1::OrgL1(config &args, globalVars &global) : BaseOrganism(args, global)
 {
   type = LOOPY;
-  if ( args.devArgs.count("type") )
+  if ( args.organismArgs.count("type") )
   {
-    if (args.devArgs["type"] == "ga")
+    if (args.organismArgs["type"] == "ga")
       type = GA;
-    else if (args.devArgs["type"] == "unloopy")
+    else if (args.organismArgs["type"] == "unloopy")
       type = UNLOOPY;
   }
 
-  initProductionRuleSize = initialDataSize * 5;
-  maxWorkingDataSize  = maxDataSize * 10;
+  initProductionRuleSize = initialGenomeSize * 5;
+  maxWorkingGenomeSize  = maxGenomeSize * 10;
 
-  workingDataFrame = 0;
-  vector<unsigned short> workingData1;
-  vector<unsigned short> workingData2;
-  workingData.push_back(workingData1);
-  workingData.push_back(workingData2);
+  workingGenomeFrame = 0;
+  vector<unsigned short> workingGenome1;
+  vector<unsigned short> workingGenome2;
+  workingGenome.push_back(workingGenome1);
+  workingGenome.push_back(workingGenome2);
 
   partPunctuationMarks.push_back({1,1});
   rulePunctuationMarks.push_back({0,0});
@@ -365,6 +365,6 @@ DevL1::DevL1(config &args, globalVars &global) : BaseDevMechanism(args, global)
   rulePunctuationMarks.push_back({3,2});
 }
 
-DevL1::~DevL1()
+OrgL1::~OrgL1()
 {
 }

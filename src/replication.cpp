@@ -1,8 +1,10 @@
 #include <iostream>
 #include <algorithm>
 #include <time.h>
-#include <fstream>
 #include <sys/stat.h>
+
+#include <sys/types.h> // These 2 are for getpid()
+#include <unistd.h>
 
 /**
    \mainpage Testing
@@ -19,50 +21,25 @@ using namespace std;
 
 #include "config.h"
 #include "misc.h"
-#include "BaseDevMechanism.h"
+#include "BaseOrganism.h"
 #include "BaseEnvironment.h"
 #include "module_handler.h"
 
-float populationFitnessAverage = 0.0;
+float populationMetabolismAverage = 0.0;
 int populationGestationTimeAverage = 0;
-float longWindowFitnessAverage = 0.0;
 
-void debugPrint(config &args, globalVars &global)
-{
-  for (int i=0; i<args.width; i++)
-  {
-    for (int j=0; j<args.height; j++)
-    {
-      if (global.grids[global.gridIndex][i][j])
-	cout << global.grids[global.gridIndex][i][j]->id << "\t";
-      else
-	cout << "000000\t";
-    }
-    cout << endl;
-  }
-  cout << endl;
-  for (int i=0; i<args.width; i++)
-  {
-    for (int j=0; j<args.height; j++)
-    {
-      if (global.grids[1-global.gridIndex][i][j])
-	cout << global.grids[1-global.gridIndex][i][j]->id << "\t";
-      else
-	cout << "000000\t";
-    }
-    cout << endl;
-  }
-  cout << endl << "*********************" << endl;
-}
-
-// Put some random, new (orphan) organisms on the grid. Periodically called. (How frequently? parameter?)
+// Put some random, new (orphan) organisms on the grid. Periodically called. (TODO How frequently? Use spawn rate parameter?)
 void newOrganisms(config &args, globalVars &global)
 {
   for(int j=0;j<args.height; j++)
   {
     // If there's already a new organism there, delete it
     if ( global.grids[1-global.gridIndex][0][j] and global.grids[1-global.gridIndex][0][j] != global.grids[global.gridIndex][0][j])
+    {
+      // Add the organism to the DB
+      global.grids[1-global.gridIndex][0][j]->addToDB(args, global);
       deleteOrganism(args, global.grids[1-global.gridIndex][0][j]);
+    }
     // Ask the model_handler for a new organism
     global.grids[1-global.gridIndex][0][j] = newOrganism(args, global); 
     global.grids[1-global.gridIndex][0][j]->initializeOrphan(args);
@@ -73,7 +50,7 @@ void newOrganisms(config &args, globalVars &global)
 }
 
 // Place the child on the grid
-void placeChild(config &args, globalVars &global, BaseDevMechanism *child, int i, int j, int &x, int &y)
+void placeChild(config &args, globalVars &global, BaseOrganism *child, int i, int j, int &x, int &y)
 {
   // Put the child in a random cell neighbouring the parent (in the other grid)
   x = mod((i+rand()%3-1), args.width);
@@ -81,7 +58,10 @@ void placeChild(config &args, globalVars &global, BaseDevMechanism *child, int i
 
   // If the cell is already occupied by a new organism, delete it
   if (global.grids[1-global.gridIndex][x][y] and global.grids[1-global.gridIndex][x][y] != global.grids[global.gridIndex][x][y])
+  {
+    global.grids[1-global.gridIndex][x][y]->addToDB(args, global);
     deleteOrganism(args, global.grids[1-global.gridIndex][x][y]);
+  }
 
   global.grids[1-global.gridIndex][x][y] = child;
 
@@ -93,22 +73,33 @@ void placeChild(config &args, globalVars &global, BaseDevMechanism *child, int i
 int initialize(int argc, char **argv, config &args, globalVars &global)
 {
   // Parse command line arguments, put result in args struct (see arguments.h)
-  // args.developmentMechanism is the name of the developmental mechanism we'll use
+  // args.organismModuleName is the name of the developmental mechanism we'll use
   if ( parseArguments(argc, argv, args) )
     return 1;
+
+  global.generation = 0;
+
+  // Set the seed. Use time + process ID
+  args.pid = getpid();
+  if (args.seed==-1)
+    args.seed = time(NULL) + args.pid;
+  srand(args.seed);
 
   // Make the directory in which the results will go
   setResultsDir(args);
   _mkdir((args.resultsBaseDir + args.resultsDir).c_str());
 
-  if (args.seed==-1)
-    args.seed = time(NULL) + args.pid;
-  srand(args.seed);
+  // Open results DB. Add table for recording organisms
+  sqlite3_open(args.dbString.c_str(), &(global.db));
+  string query = "CREATE TABLE Organisms (ID INT, ParentID INT, X INT, Y INT, StartGeneration INT, EndGeneration INT, Metabolism INT, Fitness INT, Genome TEXT, Solution TEXT, Other TEXT);";
+  sqlite3_exec(global.db, query.c_str(), NULL, NULL, &(global.sqlErrorMsg));
+
+  sqlite3_exec(global.db, "BEGIN TRANSACTION", NULL, NULL, &(global.sqlErrorMsg));
 
   // Write the current options to a config file in the results directory
   writeConfigFile(args);
 
-  BaseDevMechanism::setArgs(args);
+  BaseOrganism::setArgs(args);
 
   // Initialize a 2D grid of pointers to (NULL) organisms
   global.grids.resize(2);
@@ -131,30 +122,26 @@ int initialize(int argc, char **argv, config &args, globalVars &global)
   // Put some new (orphan) entities on the grid
   newOrganisms(args, global);
 
+  // Open file for recording population statistics
+  global.dataFile.open((args.resultsBaseDir + args.resultsDir + "population_stats.dat").c_str());
+
   return 0;
 }
 
 
 // Main loop
-int loop(config &args, globalVars &global, ofstream &dataFile1, ofstream &dataFile2, ofstream &reproducerFile)
+int loop(config &args, globalVars &global)
 {
   global.gridIndex = 1 - global.gridIndex;
-
-  //cout << "Switching frame" << endl;
-  //debugPrint(args, global);
+  global.generation++;
 
   int headCount = 0;
-  float totalScore = 0.0;
-  float maxScore = 0.0;
-  int totalGestationTime = 0;
-
   int placeNewOrganisms = 0;
 
-  // If fitnesses are periodically updated, update them
-  global.environment->updateFitnesses(args, global);
+  // If metabolisms are periodically updated, update them
+  global.environment->updateMetabolisms(args, global);
 
   // Call update on each organism periodically
-  // TODO: change mechanism? (Instead of looping over all...?)
   for(int i=0; i<args.width; i++)
   {
     for(int j=0; j<args.height; j++)
@@ -171,6 +158,7 @@ int loop(config &args, globalVars &global, ofstream &dataFile1, ofstream &dataFi
 	  {
 	    if ( global.grids[1-global.gridIndex][i][j]->age > 0 )
 	    {
+	      global.grids[1-global.gridIndex][i][j]->addToDB(args, global);
 	      deleteOrganism(args, global.grids[1-global.gridIndex][i][j]);
 	      global.grids[1-global.gridIndex][i][j] = global.grids[global.gridIndex][i][j];
 
@@ -189,11 +177,8 @@ int loop(config &args, globalVars &global, ofstream &dataFile1, ofstream &dataFi
 
 	global.grids[global.gridIndex][i][j]->age++;
 	headCount++;
-	totalGestationTime += global.grids[global.gridIndex][i][j]->gestationTime;
-	totalScore += global.grids[global.gridIndex][i][j]->score;
-	if (global.grids[global.gridIndex][i][j]->score > maxScore)
-	  maxScore = global.grids[global.gridIndex][i][j]->score;
 
+	// TODO change selection mechanism
 	// Tournament selection between this entity and one of its neighbours. Selection determines who gets executed next
 	int i2 = mod(i + rand()%3 - 1, args.width);
 	int j2;
@@ -203,7 +188,7 @@ int loop(config &args, globalVars &global, ofstream &dataFile1, ofstream &dataFi
 	  j2 = mod(j + rand()%3 - 1, args.height);
 	int ie = i;
 	int je = j;
-	if (global.grids[global.gridIndex][i2][j2] and global.grids[global.gridIndex][i2][j2]->fitness > global.grids[global.gridIndex][i][j]->fitness)
+	if (global.grids[global.gridIndex][i2][j2] and global.grids[global.gridIndex][i2][j2]->metabolism > global.grids[global.gridIndex][i][j]->metabolism)
 	{
 	  ie = i2;
 	  je = j2;
@@ -211,61 +196,39 @@ int loop(config &args, globalVars &global, ofstream &dataFile1, ofstream &dataFi
 
 	//cout << "update " << ie << ", " << je << endl << endl;
 
-	BaseDevMechanism *entity = global.grids[global.gridIndex][ie][je];
+	BaseOrganism *entity = global.grids[global.gridIndex][ie][je];
 
-	// Update the entity. See BaseDevMechanism.cpp for update cycle. Most time will be spent calling the decode function
-	// which is implemented by a subclass of BaseDevMechanism
+	// Update the entity. See BaseOrganism.cpp for update cycle. Most time will be spent calling the decode function
+	// which is implemented by a subclass of BaseOrganism
 	entity->update(args, global);
 
 	// If the entity has a non-embryonic child (has just reproduced)
 	if (entity->child and (entity->child)->state != EMBRYO)
 	{
-	  BaseDevMechanism *child = entity->child;
+	  BaseOrganism *child = entity->child;
 	  entity->child = NULL;
 
 	  int x,y;
 	  // Place the child in the neighbourhood of the parent.
 	  placeChild(args, global, child, ie, je, x, y);
 	  
-	  // Send the child's body specification to the task environment, setting its fitness.
+	  // Send the child's body specification to the task environment, setting its metabolism.
 	  global.environment->interpretBody(args, global, x, y);
-	  // TODO: made it print out every one
-	  if (global.environment->functionEvaluations>0 and global.environment->functionEvaluations<120000)
-	    global.grids[1-global.gridIndex][x][y]->printCount=1;
-
-	  if (child->printCount>0)
-	  {
-	    reproducerFile << "Function evaluations:" << global.environment->functionEvaluations << endl;
-	    child->print(reproducerFile);
-	  }
 
 	  // TODO added this to discount drops due to function change, and added below to record probability of beneficial mutation
 	  //global.environment->interpretBody(args, ie, je);
 	  //global.environment->functionEvaluations -= 1;
-	  //populationFitnessAverage += (child->fitness - entity->fitness) > 0;
-	  populationFitnessAverage += child->fitness;
+	  //populationMetabolismAverage += (child->metabolism - entity->metabolism) > 0;
+	  populationMetabolismAverage += child->metabolism;
 	  populationGestationTimeAverage += child->gestationTime;
-	  //longWindowFitnessAverage += (child->fitness - entity->fitness) > 0;
-	  longWindowFitnessAverage += child->fitness;
 
 	  // # function evaluations is only ever updated inside this block. Do all time-related things here.
-	  // Output population average fitness and average gestation time
+	  // Output population average metabolism and average gestation time
 	  if ((global.environment->functionEvaluations) % (args.width*args.height) == 0)
 	  {
-	    dataFile1 << global.environment->functionEvaluations << "\t" << populationFitnessAverage/(args.width*args.height) << "\t" << populationGestationTimeAverage/(float)(args.width*args.height) << endl;
-	    populationFitnessAverage = 0.0;
+	    global.dataFile << global.generation << "\t" << populationMetabolismAverage/(args.width*args.height) << "\t" << populationGestationTimeAverage/(float)(args.width*args.height) << endl;
+	    populationMetabolismAverage = 0.0;
 	    populationGestationTimeAverage = 0;
-	  }
-	  // Output long window average fitness
-	  if ((global.environment->functionEvaluations) % args.averagingWindowLength == 0)
-	  {
-	    dataFile2 << global.environment->functionEvaluations - args.averagingWindowLength/2 << "\t" << longWindowFitnessAverage/(float)args.averagingWindowLength << endl;
-	    longWindowFitnessAverage = 0.0;
-	  }
-	  if ((global.environment->functionEvaluations) % 20000 == 0)
-	  {
-	    //if (global.grids[global.gridIndex][0][0])
-	    //  global.grids[global.gridIndex][0][0]->printCount=10;
 	  }
 
 	  // Every so often, add new (orphan) entities to one line of the grid
@@ -291,6 +254,8 @@ int loop(config &args, globalVars &global, ofstream &dataFile1, ofstream &dataFi
 // Clean up memory
 void cleanUp(config &args, globalVars &global)
 {
+  global.dataFile.close();
+
   for(int i=0; i<args.width; i++)
   {
     for(int j=0; j<args.height; j++)
@@ -301,11 +266,15 @@ void cleanUp(config &args, globalVars &global)
       {
 	if (global.grids[g][i][j])
 	{
+	  global.grids[g][i][j]->addToDB(args, global);
 	  deleteOrganism(args, global.grids[g][i][j]);
 	}
       }
     }
   }
+
+  sqlite3_exec(global.db, "END TRANSACTION", NULL, NULL, &(global.sqlErrorMsg));
+  sqlite3_close(global.db);
 
   deleteEnvironment(args, global.environment);
 }
@@ -320,21 +289,11 @@ int main(int argc, char **argv)
   if ( initialize(argc, argv, args, global) )
     return 0;
 
-  ofstream dataFile1, dataFile2;
-  dataFile1.open((args.resultsBaseDir + args.resultsDir + "time1.dat").c_str());
-  dataFile2.open((args.resultsBaseDir + args.resultsDir + "time2.dat").c_str());
-  ofstream reproducerFile;
-  reproducerFile.open((args.resultsBaseDir + args.resultsDir + "reproducers.dat").c_str());
-
   // Enter the main loop
   while(global.environment->functionEvaluations < args.totalFunctionEvaluations)
   {
-    loop(args, global, dataFile1, dataFile2, reproducerFile);
+    loop(args, global);
   }
-
-  dataFile1.close();
-  dataFile2.close();
-  reproducerFile.close();
 
   // Free allocated memory
   cleanUp(args, global);

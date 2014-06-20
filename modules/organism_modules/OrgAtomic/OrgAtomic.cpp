@@ -1,33 +1,33 @@
 using namespace std;
 #include <iostream>
 #include <algorithm>
-#include "DevAtomic.h"
+#include "OrgAtomic.h"
 
 /*
-  Implemented a language based on DevSlash/A (based on Avida) to use as a development mechanism.
+  Implemented a language based on OrgSlash/A (based on Avida) to use as a development mechanism.
   Didn't really work. Pick up again at some point?
  */
 
-void DevAtomic::printDecoder()
+void OrgAtomic::printDevelopmentProcess()
 {
 }
 
-// Create a new decoder, for an `orphan' cell
-void DevAtomic::initializeOrphanDecoder(config &args)
+// Create a new developmentProcess, for an `orphan' cell
+void OrgAtomic::initializeOrphanDevelopmentProcess(config &args)
 {
   code.clear();
-  for(int i=0; i<initialDataSize*5; ++i)
+  for(int i=0; i<initialGenomeSize*5; ++i)
     code.push_back(rand()%isetSize);
 }
 
 // Done at the start of each reproduction cycle
-void DevAtomic::initializeDecoding(config &args)
+void OrgAtomic::initializeDevelopmentProcess(config &args)
 {
-  DevAtomic *c = ((DevAtomic*)child);
+  OrgAtomic *c = ((OrgAtomic*)child);
 
-  // Copy child's data to my tape
+  // Copy child's genome to my tape
   tape.clear();
-  copy(child->data.begin(), child->data.end(), back_inserter(tape));
+  copy(child->genome.begin(), child->genome.end(), back_inserter(tape));
   output.clear();
   A = 0;
   I = 0;
@@ -38,7 +38,7 @@ void DevAtomic::initializeDecoding(config &args)
   loopTimes.clear();
 }
 
-void DevAtomic::execute(unsigned int ins)
+void OrgAtomic::execute(unsigned int ins)
 {
   ip++;
 
@@ -145,9 +145,9 @@ void DevAtomic::execute(unsigned int ins)
 }
 
 // Iteratively run the thing
-void DevAtomic::decode(config &args)
+void OrgAtomic::updateDevelopment(config &args)
 {
-  DevAtomic *c = (DevAtomic*)child;
+  OrgAtomic *c = (OrgAtomic*)child;
 
   // Execute the instruction at the instruction pointer, increment the instruction pointer
   execute(*ip);
@@ -170,21 +170,21 @@ void DevAtomic::decode(config &args)
       if (afterSeparator == 0)
 	c->code.push_back((*it)%isetSize);
       else if (afterSeparator == 3)
-	c->bodySpecification.push_back((*it)%256);
+	c->somaSpecification.push_back((*it)%256);
     }
   }
 }
 
-DevAtomic::DevAtomic(config &args, globalVars &global) : BaseDevMechanism(args, global)
+OrgAtomic::OrgAtomic(config &args, globalVars &global) : BaseOrganism(args, global)
 {
   isetSize = 42;
   ip = code.begin();
   A = 0;
   I = 0;
  
-  maxTapeSize = maxDataSize * 10;
+  maxTapeSize = maxGenomeSize * 10;
 }
 
-DevAtomic::~DevAtomic()
+OrgAtomic::~OrgAtomic()
 {
 }

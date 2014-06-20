@@ -3,36 +3,47 @@
 
 #include <vector>
 #include <map>
+#include <fstream>
+#include <sqlite3.h>
 
 struct config
 {
   string       resultsBaseDir;
   string       resultsDir;
+  string       dbString;
+  int          recordLevel;
+
   int          seed;
-  int          display;
+  int          pid;
+
   int          debug;
   int          width;
   int          height;
+
   int          spawnRate;
-  int          averagingWindowLength;
   int          totalFunctionEvaluations;
-  string       developmentMechanism;
-  string       environment;
-  map <string, string> devArgs;
-  map <string, string> envArgs;
-  int          pid;
+
+  string       organismModuleName;
+  map <string, string> organismArgs;
+  string       environmentModuleName;
+  map <string, string> environmentArgs;
 };
 
-class BaseDevMechanism; // Forward declarations so I can have pointers to these objects without including the .hs (circular includes)
+class BaseOrganism; // Forward declarations so I can have pointers to these objects without including the .hs (circular includes)
 class BaseEnvironment;
 
 struct globalVars
 {
   BaseEnvironment *environment;
-  std::vector <std::vector <std::vector <BaseDevMechanism*> > > grids;
+  std::vector <std::vector <std::vector <BaseOrganism*> > > grids;
   int gridIndex;
 
   int nextID;
+  int generation;
+
+  ofstream dataFile;
+  sqlite3 *db;
+  char *sqlErrorMsg;
 };
 
 void setResultsDir(config&);
