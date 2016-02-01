@@ -9,7 +9,7 @@ void EnvRepeatedCycle::interpretBody(config &args, globalVars &global, int x, in
 {
   // TODO should probably pass the grid in. When interpret?
   BaseOrganism *rep = global.grids[1-global.gridIndex][x][y];
-  rep->metabolism = 0.0;
+  float metabolism = 0.0;
 
   int cycle = 1000000;
   if(args.environmentArgs.count("switching-rate"))
@@ -26,7 +26,7 @@ void EnvRepeatedCycle::interpretBody(config &args, globalVars &global, int x, in
   {
     if (*it == toReward)
     {
-      rep->metabolism += 1.0;
+      metabolism += 1.0;
     }  
   }
   functionEvaluations += 1;
@@ -39,6 +39,7 @@ void EnvRepeatedCycle::interpretBody(config &args, globalVars &global, int x, in
 
   // Reward for short genome
   rep->metabolism -= rep->genome.size() / 2;*/
+  rep->updateMetabolism(metabolism);
 }
 
 

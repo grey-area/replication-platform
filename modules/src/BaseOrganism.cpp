@@ -43,6 +43,7 @@ BaseOrganism::BaseOrganism(config &args, globalVars &global)
   global.nextID++; 
 
   parentID = 0;
+  species = 0;
 
   // The default state of a new organism
   state   = EMBRYO;
@@ -85,11 +86,6 @@ void BaseOrganism::printSomaSpecification(ofstream &stream)
 }
 
 // **
-/*! \brief Brief description.
- *         Brief description continued.
- *
- *  Detailed description starts here.
- */
 void BaseOrganism::printDevelopmentProcess(ofstream &stream)
 {
 }
@@ -118,11 +114,6 @@ void BaseOrganism::initializeOrphanGenome(config &args)
 }
 
 // **
-/*! \brief Brief description.
- *         Brief description continued.
- *
- *  Detailed description starts here.
- */
 void BaseOrganism::initializeOrphanDevelopmentProcess(config &args)
 {
 }
@@ -131,6 +122,7 @@ void BaseOrganism::initializeOrphanDevelopmentProcess(config &args)
 void BaseOrganism::initializeOrphan(config &args)
 {
   state = START;
+  species = rand()%256;
   initializeOrphanGenome(args);
   initializeOrphanDevelopmentProcess(args);
 }
@@ -138,21 +130,11 @@ void BaseOrganism::initializeOrphan(config &args)
 
 // **
 // Called at the start of each development cycle.
-/*! \brief Brief description.
- *         Brief description continued.
- *
- *  Detailed description starts here.
- */
 void BaseOrganism::initializeDevelopmentProcess(config &args)
 {
 }
 
 // Return a copy of the genome. Used for copying genome to child.
-/*! \brief Brief description.
- *         Brief description continued.
- *
- *  Detailed description starts here.
- */
 vector<unsigned short> BaseOrganism::copyGenome(config &args)
 {
   vector<unsigned short> genomeCopy (genome);
@@ -162,55 +144,41 @@ vector<unsigned short> BaseOrganism::copyGenome(config &args)
 
 // *
 // Mutate the genome of the organism in place
-/*! \brief Brief description.
- *         Brief description continued.
- *
- *  Detailed description starts here.
- */
-void BaseOrganism::mutateGenome(config &args, vector<unsigned short> &genome1)
+int BaseOrganism::mutateGenome(config &args, vector<unsigned short> &genome1)
 {
+  int mutated = 0;
+
   // Insert with probability 0.5
   if (rand()%2==0 and genome1.size() < maxGenomeSize)
+  {
     genome1.insert(genome1.begin()+rand()%(genome1.size()), rand()%alphabetSize);
+    mutated = 1;
+  }
   // Delete with probability 0.5
   if (rand()%2==0 and genome1.size() > minGenomeSize)
+  {
     genome1.erase(genome1.begin()+rand()%(genome1.size()));
+    mutated = 1;
+  }
   // Change with probability 0.5
   if (rand()%2==0)
+  {
     genome1.at(rand()%(genome1.size())) = rand()%alphabetSize;  
+    mutated = 1;
+  }
+
+  return mutated;
 }
 
-void BaseOrganism::addToDB(config &args, globalVars &global)
+void BaseOrganism::mutateChild(config &args, BaseOrganism *child)
 {
-  // Only record organisms if record level > 0
-  if (args.recordLevel > 0)
-  {
-    
-    string query = "INSERT INTO Organisms (ID, ParentID, X, Y, StartGeneration, EndGeneration, Metabolism, Fitness, Genome, Solution, Other) VALUES (";
-    string result;
-    stringstream convert;
-    convert << id << "," << parentID << ",0,0," << generationOfBirth << "," << global.generation << "," << metabolism << ",0,";
-
-    
-    if (args.recordLevel == 1)
-      convert << "'','','');";
-    else // TODO only record genome, solution, and organism configuration if record level > 1
-      convert << "'test','test','test');";
-
-    query = query + convert.str();
-
-    sqlite3_exec(global.db, query.c_str(), NULL, NULL, &(global.sqlErrorMsg));
-  }
+  if (mutateGenome(args, child->genome))
+    (child->species)++;
 }
 
 
 // **
 // Iteratively called during the decode cycle.
-/*! \brief Brief description.
- *         Brief description continued.
- *
- *  Detailed description starts here.
- */
 void BaseOrganism::updateDevelopment(config &args)
 {
   // The default behaviour is that the genome and the `phenotype' are the same thing
@@ -218,6 +186,12 @@ void BaseOrganism::updateDevelopment(config &args)
   state = REPRODUCED;
 }
 
+void BaseOrganism::updateMetabolism(float m)
+{
+  metabolism = m;
+  if (metabolism/parentMetabolism > 1.5 or metabolism/parentMetabolism < 0.666)
+    species = rand()%256;
+}
 
 void BaseOrganism::update(config &args, globalVars &global)
 {
@@ -228,6 +202,7 @@ void BaseOrganism::update(config &args, globalVars &global)
       // Create new child
       child = newOrganism(args, global);
       child->parentID = id;
+      child->species = species;
       gestationTime = 0;
 
       // Copy genome to child
@@ -251,6 +226,7 @@ void BaseOrganism::update(config &args, globalVars &global)
     case REPRODUCED:
 
       child->metabolism = metabolism;
+      child->parentMetabolism = metabolism;
       child->state   = START; // No longer an embryo!
 
       state          = START; // Finished reproduction cycle

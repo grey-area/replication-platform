@@ -15,7 +15,7 @@ BaseEnvironment::~BaseEnvironment()
 // Given the coordinates of a new entity, create whatever we need to in order to evaluate its metabolism immediately and/or in the future, and maybe evaluate it now
 void BaseEnvironment::interpretBody(config &args, globalVars &global, int x, int y)
 {
-  global.grids[global.gridIndex][x][y]->metabolism = 0.0;
+  global.grids[global.gridIndex][x][y]->updateMetabolism(0.0);
   functionEvaluations += 1;
 }
 

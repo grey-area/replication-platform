@@ -48,6 +48,7 @@ struct globalVars
 
 void setResultsDir(config&);
 ostream& operator << (ostream&, config);
+void serialize(ostream&, globalVars&);
 void writeConfigFile(config&);
 int parseArguments(int, char**, config&);
 

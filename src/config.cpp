@@ -18,6 +18,7 @@ using namespace std;
 
 #include "config.h"
 
+
 void setResultsDir(config &args)
 {
   ostringstream dirStream;
@@ -47,6 +48,24 @@ void setResultsDir(config &args)
   args.resultsDir = dirStream.str();
 
   args.dbString = args.resultsBaseDir + args.resultsDir + "population.db";
+}
+
+void serialize(ostream &o, globalVars &global)
+{
+  o << global.gridIndex << endl;
+  o << global.nextID << endl;
+  o << global.generation << endl;
+
+  // TODO environment serialization
+  //global.environment.baseSerialize(o);
+  //global.environment.serialize(o);
+
+  // TODO organisms serialization
+  // TODO loop over grid, serializing organisms
+
+  // TODO deserialization
+
+  // TODO how change some settings on deserialization?
 }
 
 // Print the program options, in the same format as the config file
@@ -96,6 +115,7 @@ void writeConfigFile(config &args)
   configFile.close();
 }
  
+
 // Parse command line and config file
 int parseArguments(int argc, char **argv, config &args)
 {
@@ -120,7 +140,7 @@ int parseArguments(int argc, char **argv, config &args)
     {NULL, 0, NULL, 0}
   };
   opterr=false;
-
+  
   while ((c = getopt_long(argc, argv, "",
 	long_options, &option_index)) != -1)
   {

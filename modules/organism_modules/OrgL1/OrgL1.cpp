@@ -243,7 +243,12 @@ void OrgL1::updateDevelopment(config &args)
     // if we're over the working genome limit, stop unpacking
     if (workingGenome.at(1-workingGenomeFrame).size() > maxWorkingGenomeSize)
     {
-      workingGenome.at(1-workingGenomeFrame).erase(workingGenome.at(1-workingGenomeFrame).begin()+maxWorkingGenomeSize, workingGenome.at(1-workingGenomeFrame).end());
+
+      // TODO: I've changed this since the ALIFE experiments to kill anything that grows too big
+      workingGenome.at(1-workingGenomeFrame).erase(workingGenome.at(1-workingGenomeFrame).begin(), workingGenome.at(1-workingGenomeFrame).end());
+
+// This is the old version that doesn't kill when going over max size
+//workingGenome.at(1-workingGenomeFrame).erase(workingGenome.at(1-workingGenomeFrame).begin()+maxWorkingGenomeSize, workingGenome.at(1-workingGenomeFrame).end());
       changedOnLastPass = false;
       break;
     }
@@ -345,7 +350,7 @@ OrgL1::OrgL1(config &args, globalVars &global) : BaseOrganism(args, global)
   }
 
   initProductionRuleSize = initialGenomeSize * 5;
-  maxWorkingGenomeSize  = maxGenomeSize * 10;
+  maxWorkingGenomeSize  = maxGenomeSize * 40;
 
   workingGenomeFrame = 0;
   vector<unsigned short> workingGenome1;

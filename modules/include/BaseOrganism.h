@@ -25,6 +25,9 @@ public:
 
   int id;
   int parentID;
+  int x;
+  int y;
+  int species;
 
   int state;
   unsigned int generationOfBirth;
@@ -33,6 +36,7 @@ public:
 
   // The environment sets the metabolism based on how the soma interacts with the environment
   float metabolism;
+  float parentMetabolism;
 
   // The genome of the organism
   std::vector<unsigned short> genome;
@@ -43,14 +47,15 @@ public:
   BaseOrganism* child;
 
   virtual std::vector<unsigned short> copyGenome(config&);
-  virtual void mutateGenome(config&, vector<unsigned short>&); // *
+  virtual int mutateGenome(config&, vector<unsigned short>&); // *
+  void mutateChild(config&, BaseOrganism*);
   // For creating new random organism
   void initializeOrphan(config&);
   // For printing the state of the organism
   void print(ofstream&);
   void update(config&,globalVars&);
 
-  void addToDB(config&,globalVars&);
+  void updateMetabolism(float);
 
   BaseOrganism(config&, globalVars&);
   virtual ~BaseOrganism();

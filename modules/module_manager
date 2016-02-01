@@ -19,10 +19,15 @@ remEnv = 6
 state  = main
 
 
-makefile1 = """all: directories lib/modules.so
+makefileHead = """all: directories lib/modules.so
+
+profile: directories lib/modules_profile.so
 
 directories:
 	mkdir -p build; mkdir -p lib
+"""
+
+makefile1 = """
 
 lib/modules.so: build/module_handler.o """
 
@@ -44,6 +49,9 @@ makefile5 = """build/BaseOrganism.o: ./src/BaseOrganism.cpp ./include/BaseOrgani
 build/BaseEnvironment.o: ./src/BaseEnvironment.cpp ./include/BaseEnvironment.h ../include/config.h
 	g++ -O3 -std=c++0x -I./include/ -I../include/ -fpic -c $< -o $@
 
+"""
+
+makefileTail = """
 clean:
 	rm -f *.o *.so *~ \#* ./build/*.o ./lib/*.so
 """
@@ -153,6 +161,8 @@ def recompile():
         makefileString += "build/" + module + ".o: ./environment_modules/" + module + "/" + module + ".cpp ./environment_modules/" + module + "/" + module + ".h ./include/BaseEnvironment.h"
         makefileString += makefileLine
     makefileString += makefile5
+
+    makefileString = makefileHead + makefileString + makefileString.replace('.o', '_profile.o').replace('.so', '_profile.so').replace('-O3', '-pg') + makefileTail
 
     with open('Makefile', 'w') as makefileFile:
         makefileFile.write(makefileString)
